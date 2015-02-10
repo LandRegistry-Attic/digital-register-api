@@ -4,16 +4,34 @@ import os
 from flask import Flask, abort, jsonify
 import requests
 import json
+from sqlalchemy import Table, Column, String, MetaData, create_engine, Integer
+from sqlalchemy.inspection import inspect
+from sqlalchemy.sql import select, or_
+import pg8000
+
+from service.models import TitleRegisterData
+from service import app
+
+def get_title_register(title_ref):
+    return TitleRegisterData.query.get(title_ref)
 
 @app.route('/titles/<title_ref>', methods=['GET'])
 def get_title(title_ref):
     if title_ref == 'invalid-ref':
         abort(404)
+    elif title_ref == 'DN1000':
+        data = get_title_register(title_ref)
+        result = {
+          "data": data.register_data,
+          "title_number": data.title_number,
+          "geometry_data": data.geometry_data,
+        }
+        return jsonify(result)
     elif title_ref == 'DT160760':
         json_file = open('service/DT160760.json', 'r')
         sample_json = json_file.read()
         data = json.loads(sample_json)
-        return jsonify(data)
+        return jsonify(data.title_number)
     else:
         return jsonify(
             {
