@@ -17,7 +17,8 @@ class ViewTitleTestCase(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
 
-    def test_get_invalid_title_path_404(self):
+    @mock.patch('service.server.get_title_register', return_value=None)
+    def test_get_invalid_title_path_404(self, mock_data):
         response = self.app.get('/titles/invalid-ref')
         assert response.status_code == 404
 
