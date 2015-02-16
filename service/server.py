@@ -5,7 +5,6 @@ from flask import Flask, abort, jsonify
 import requests
 import json
 from sqlalchemy import Table, Column, String, create_engine
-#from sqlalchemy.inspection import inspect
 import pg8000
 
 from service.models import TitleRegisterData
@@ -24,6 +23,7 @@ def get_title(title_ref):
         }
         return jsonify(result)
     else:
+        #Title not found
         abort(404)
 
 if __name__ == '__main__':
