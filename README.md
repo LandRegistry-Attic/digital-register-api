@@ -31,7 +31,7 @@ To run the acceptance tests for the Digital Register, go to the `acceptance-test
    ./run-tests.sh
 ```
 
-You will need to have a Postgres database running (see `db/lr-start-db` and `db/insert-fake-data` scripts in the [centos-dev-env](https://github.com/LandRegistry/centos-dev-env project)), as well as the digital-register-frontend and digital-register-api applications running on your development VM. 
+You will need to have a Postgres database running (see `db/lr-start-db` and `db/insert-fake-data` scripts in the [centos-dev-env](https://github.com/LandRegistry/centos-dev-env) project), as well as the digital-register-frontend and digital-register-api applications running on your development VM. 
 
 ## Jenkins builds 
 
