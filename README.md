@@ -4,11 +4,11 @@ This is the repo for the backend of the digital register service. It is written 
 
 ### Digital Register API build status
 
-[![Build Status](http://54.72.23.130/job/digital-register-api-unit-tests%20(Master)/badge/icon)](http://54.72.23.130/job/digital-register-api-unit-tests%20(Master)/)
+[![Build Status](http://54.72.23.130/job/digital-register-api-unit-test%20(Master)/badge/icon)](http://54.72.23.130/job/digital-register-api-unit-tests%20(Master)/)
 
-### Digital Register API Acceptance tests status
+### Digital Register Acceptance tests status
 
-[![Build Status](http://54.72.23.130/job/digital-register-api-acceptance-tests/badge/icon)](http://54.72.23.130/job/digital-register-api-acceptance-tests/)
+[![Build Status](http://54.72.23.130/job/digital-register-frontend-acceptance-tests/badge/icon)](http://54.72.23.130/job/digital-register-frontend-acceptance-tests/)
 
 ## Setup
 
@@ -36,6 +36,6 @@ You will need to have a Postgres database running (see `db/lr-start-db` and `db/
 ## Jenkins builds 
 
 We use three separate builds:
-- [branch](http://54.72.23.130/job/digital-register-api-unit-tests%20(Branch)/)
-- [master](http://54.72.23.130/job/digital-register-api-unit-tests%20(Master)/)
-- [acceptance](http://54.72.23.130/job/digital-register-api-acceptance-tests/)
+- [branch](http://54.72.23.130/job/digital-register-api-unit-test%20(Branch)/)
+- [master](http://54.72.23.130/job/digital-register-api-unit-test%20(Master)/)
+- [acceptance](http://54.72.23.130/job/digital-register-frontend-acceptance-tests/)
