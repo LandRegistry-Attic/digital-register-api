@@ -1,11 +1,14 @@
 import os
 
-class Config(object):
-    DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ['POSTGRES_REGISTER_DATABASE_URI'] 
+CONFIG_DICT = {
+    'DEBUG': False,
+    'SQLALCHEMY_DATABASE_URI': os.environ['POSTGRES_REGISTER_DATABASE_URI'],
+}
 
-class DevelopmentConfig(Config):
-    DEBUG = True
+settings = os.environ.get('SETTINGS')
 
-class TestConfig(DevelopmentConfig):
-    TESTING = True
+if settings == 'dev':
+    CONFIG_DICT['DEBUG'] = True
+elif settings == 'test':
+    CONFIG_DICT['DEBUG'] = True
+    CONFIG_DICT['TESTING'] = True

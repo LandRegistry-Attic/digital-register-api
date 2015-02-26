@@ -1,1 +1,1 @@
-export SETTINGS='config.TestConfig'
+export SETTINGS='test'
