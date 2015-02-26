@@ -3,8 +3,10 @@ from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 import requests
 
-app = Flask(__name__)
+from config import CONFIG_DICT
 
-app.config.from_object(os.environ.get('SETTINGS'))
+
+app = Flask(__name__)
+app.config.update(CONFIG_DICT)
 
 db = SQLAlchemy(app)
