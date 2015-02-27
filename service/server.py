@@ -6,8 +6,12 @@ import requests
 import json
 from sqlalchemy import Table, Column, String, create_engine
 import pg8000
+from elasticsearch import Elasticsearch
+from elasticsearch_dsl import Search
 
 from service.models import TitleRegisterData
+
+ELASTIC_SEARCH_ENDPOINT = app.config['ELASTIC_SEARCH_ENDPOINT']
 
 def get_title_register(title_ref):
     return TitleRegisterData.query.get(title_ref)
@@ -15,6 +19,15 @@ def get_title_register(title_ref):
 @app.route('/', methods=['GET'])
 def healthcheck():
     return "OK"
+
+#TODO: This is going to be used to get the property with the postcode, needs
+#double checking.
+def get_property_address(postcode):
+    client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
+    search = Search(using=client, index='landregistry')
+    query = search.filter('term', postcode=postcode)
+
+    return query.execute().hits
 
 @app.route('/titles/<title_ref>', methods=['GET'])
 def get_title(title_ref):
@@ -29,6 +42,17 @@ def get_title(title_ref):
     else:
         #Title not found
         abort(404)
+
+@app.route('/titles/<postcode>', methods=['GET'])
+def get_properties(postcode):
+    address_records = get_property_address(postcode)
+    nof_results = len(address_records)
+    if nof_results != 1:
+        abort(404)
+
+    result = create_json(address_records)
+
+    return jsonify(result)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
