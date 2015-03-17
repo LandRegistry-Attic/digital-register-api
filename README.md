@@ -4,7 +4,7 @@ This is the repo for the backend of the digital register service. It is written 
 
 ### Digital Register API build status
 
-[![Build Status](http://52.16.47.1/job/digital-register-api-unit-test%20(Master)/badge/icon)](http://52.16.47.1/job/digital-register-api-unit-tests%20(Master)/)
+[![Build Status](http://52.16.47.1/job/digital-register-api-unit-test%20(Master)/badge/icon)](http://52.16.47.1/job/digital-register-api-unit-test%20(Master)/)
 
 ### Digital Register Acceptance tests status
 
