@@ -12,6 +12,7 @@ CONFIG_DICT = {
     'DEBUG': False,
     'SQLALCHEMY_DATABASE_URI': sql_alchemy_uri,
     'LOGGING_CONFIG_FILE_PATH': logging_config_file_path,
+    'ELASTIC_SEARCH_ENDPOINT': os.environ['ELASTIC_SEARCH_ENDPOINT'],
 }
 
 settings = os.environ.get('SETTINGS')
