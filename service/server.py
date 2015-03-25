@@ -6,15 +6,17 @@ import requests
 import json
 from sqlalchemy import Table, Column, String, create_engine
 import pg8000
-
 from service.models import TitleRegisterData
+
 
 def get_title_register(title_ref):
     return TitleRegisterData.query.get(title_ref)
 
+
 @app.route('/', methods=['GET'])
 def healthcheck():
     return "OK"
+
 
 @app.route('/titles/<title_ref>', methods=['GET'])
 def get_title(title_ref):
@@ -27,7 +29,7 @@ def get_title(title_ref):
         }
         return jsonify(result)
     else:
-        #Title not found
+        # Title not found
         abort(404)
 
 if __name__ == '__main__':
