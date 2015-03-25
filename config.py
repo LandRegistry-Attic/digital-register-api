@@ -5,7 +5,8 @@ password = os.environ['POSTGRES_PASSWORD']
 host = os.environ['POSTGRES_HOST']
 port = os.environ['POSTGRES_PORT']
 database = os.environ['POSTGRES_DB']
-sql_alchemy_uri = 'postgresql+pg8000://{0}:{1}@{2}:{3}/{4}'.format(user, password, host, port, database)
+db_uri_template = 'postgresql+pg8000://{0}:{1}@{2}:{3}/{4}'
+sql_alchemy_uri = db_uri_template.format(user, password, host, port, database)
 logging_config_file_path = os.environ['LOGGING_CONFIG_FILE_PATH']
 
 CONFIG_DICT = {

@@ -3,8 +3,8 @@ from logging import config
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 import json
-
 from config import CONFIG_DICT
+
 
 def setup_logging(logging_config_file_path):
     try:
