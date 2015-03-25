@@ -8,9 +8,10 @@
   },
   "handlers": {
     "file": {
-      "class": "logging.FileHandler",
+      "class": "logging.handlers.RotatingFileHandler",
       "formatter": "default",
-      "filename": "logs/digital-register-api.log"
+      "maxBytes": 1000000,
+      "filename": "/var/log/applications/digital-register-api.log"
     },
     "console": {
       "class": "logging.StreamHandler",
@@ -30,4 +31,3 @@
     ]
   }
 }
-
