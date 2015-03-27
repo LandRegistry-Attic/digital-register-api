@@ -79,9 +79,11 @@ def get_properties(postcode):
     address_records = get_property_address(postcode)
     if address_records:
         result = format_address_records(address_records)
+        print('this is what the api returns:')
+        print(json.dumps(result))
         return jsonify(result)
     else:
-        abort(404)
+        return jsonify([])
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
