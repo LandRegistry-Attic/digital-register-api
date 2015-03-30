@@ -7,6 +7,7 @@ class TitleRegisterData(db.Model):
     register_data = db.Column(JSON)
     geometry_data = db.Column(JSON)
 
+
 class TitleNumbersUprns(db.Model):
     __tablename__ = 'title_numbers_uprns'
     title_number = db.Column(db.String(10))

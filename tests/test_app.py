@@ -14,7 +14,7 @@ DN1001_title = FakeTitleRegisterData('DN1001', "data", "geometry")
 two_titles = [DN1000_title, DN1001_title]
 
 FakeElasticSearchHit = namedtuple('Hit', [
-    'addressKey', 'buildingName','buildingNumber', 'businessName',
+    'addressKey', 'buildingName', 'buildingNumber', 'businessName',
     'departmentName', 'dependentLocality', 'dependentThoroughfareName',
     'doubleDependentLocality', 'postCode', 'postTown',
     'subBuildingName', 'thoroughfareName', 'uprns'])
@@ -22,14 +22,14 @@ FakeElasticSearchHit = namedtuple('Hit', [
 no_elastic_search_hits = []
 
 single_elastic_search_hit = [
-        FakeElasticSearchHit(
-            'address key_', 'building name_', '34',
-            'business name_', 'department name_', 'dependent locality_',
-            'dependent thoroughfare name_', 'double dependent locality_',
-            'PL9 8TB', 'Plymouth',
-            'sub-building name_', 'Murhill Street', 'udprn_',
-        ),
-    ]
+    FakeElasticSearchHit(
+        'address key_', 'building name_', '34',
+        'business name_', 'department name_', 'dependent locality_',
+        'dependent thoroughfare name_', 'double dependent locality_',
+        'PL9 8TB', 'Plymouth',
+        'sub-building name_', 'Murhill Street', 'udprn_',
+    ),
+]
 
 
 class ViewTitleTestCase(unittest.TestCase):
@@ -65,7 +65,7 @@ class ViewTitleTestCase(unittest.TestCase):
         self.assertTrue(str('"data": "data"') in page_content)
         self.assertTrue(str('"geometry_data": "geometry"') in page_content)
 
-    #404 status code when the database query does not return anything
+    # 404 status code when the database query does not return anything
     @mock.patch('service.server.get_property_address', return_value=no_elastic_search_hits)
     def test_get_invalid_property_path_empty_result(self, mock_data):
         response = self.app.get('/title_search_postcode/invalid-postcode')
