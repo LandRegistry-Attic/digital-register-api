@@ -54,16 +54,16 @@ class ViewTitleTestCase(unittest.TestCase):
     @mock.patch('service.server.get_title_register', return_value=DN1000_title)
     def test_get_correct_title_number(self, mock_data):
         response = self.app.get('/titles/DN1000')
-        self.assertTrue(str('"title_number": "DN1000"') in str(response.data))
+        assert str('"title_number": "DN1000"') in response.data.decode()
 
     # The data and geometry JSON blobs returned from the database query
     # are returned in the JSON response
     @mock.patch('service.server.get_title_register', return_value=DN1000_title)
     def test_get_correct_register_data(self, mock_data):
         response = self.app.get('/titles/DN1000')
-        page_content = str(response.data)
-        self.assertTrue(str('"data": "data"') in page_content)
-        self.assertTrue(str('"geometry_data": "geometry"') in page_content)
+        page_content = response.data.decode()
+        assert str('"data": "data"') in page_content
+        assert str('"geometry_data": "geometry"') in page_content
 
     # 404 status code when the database query does not return anything
     @mock.patch('service.server.get_property_address', return_value=no_elastic_search_hits)
@@ -86,7 +86,7 @@ class ViewTitleTestCase(unittest.TestCase):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         response_json = json.loads(response.data.decode())
         titles = response_json['titles']
-        self.assertEqual(titles[0]['title_number'], 'DN1000')
+        assert titles[0]['title_number'] == 'DN1000'
 
     @mock.patch('service.server.get_property_address', return_value=single_elastic_search_hit)
     @mock.patch('service.server.get_titles_for_uprns', return_value=two_titles)
@@ -94,8 +94,8 @@ class ViewTitleTestCase(unittest.TestCase):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         response_json = json.loads(response.data.decode())
         titles = response_json['titles']
-        self.assertEqual(titles[0]['title_number'], 'DN1000')
-        self.assertEqual(titles[1]['title_number'], 'DN1001')
+        assert titles[0]['title_number'] == 'DN1000'
+        assert titles[1]['title_number'] == 'DN1001'
 
     @mock.patch('service.server.get_property_address', return_value=single_elastic_search_hit)
     @mock.patch('service.server.get_titles_for_uprns', return_value=[DN1000_title])
@@ -103,4 +103,4 @@ class ViewTitleTestCase(unittest.TestCase):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         response_json = json.loads(response.data.decode())
         titles = response_json['titles']
-        self.assertEqual(titles[0]['data'], 'data')
+        assert titles[0]['data'] == 'data'
