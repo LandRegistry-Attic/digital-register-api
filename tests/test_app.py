@@ -67,9 +67,12 @@ class ViewTitleTestCase(unittest.TestCase):
 
     #404 status code when the database query does not return anything
     @mock.patch('service.server.get_property_address', return_value=no_elastic_search_hits)
-    def test_get_invalid_property_path_404(self, mock_data):
+    def test_get_invalid_property_path_empty_result(self, mock_data):
         response = self.app.get('/title_search_postcode/invalid-postcode')
-        assert response.status_code == 404
+        assert response.status_code == 200
+        response_json = json.loads(response.data.decode())
+        titles = response_json['titles']
+        assert titles == []
 
     @mock.patch('service.server.get_property_address', return_value=single_elastic_search_hit)
     @mock.patch('service.server.get_titles_for_uprns', return_value=[DN1000_title])

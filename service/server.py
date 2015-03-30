@@ -26,8 +26,6 @@ def get_title_register(title_ref):
 def healthcheck():
     return "OK"
 
-# TODO: This is going to be used to get the property with the postcode, needs
-# double checking.
 def get_property_address(postcode):
     client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
     search = Search(using=client, index='landregistry', doc_type='property_by_postcode')
@@ -83,7 +81,7 @@ def get_properties(postcode):
         print(json.dumps(result))
         return jsonify(result)
     else:
-        return jsonify([])
+        return jsonify({ 'titles': []})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
