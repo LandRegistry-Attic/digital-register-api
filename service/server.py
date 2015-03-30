@@ -50,7 +50,7 @@ def format_address_into_single_string(address_record):
 def get_titles_for_uprns(uprns):
     title_number_uprns = TitleNumbersUprns.query.filter(
         TitleNumbersUprns.uprn.in_(uprns)).all()
-    title_numbers = map(lambda x: x.title_number, title_number_uprns)
+    title_numbers = {tnu.title_number for tnu in title_number_uprns}
     return TitleRegisterData.query.filter(TitleRegisterData.title_number.in_(title_numbers)).all()
 
 
