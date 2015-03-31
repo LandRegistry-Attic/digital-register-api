@@ -47,25 +47,15 @@ def format_address_into_single_string(address_record):
     return formatted_address
 
 
-def get_titles_for_uprns(uprns):
-    title_number_uprns = TitleNumbersUprns.query.filter(
-        TitleNumbersUprns.uprn.in_(uprns)).all()
-    title_numbers = {tnu.title_number for tnu in title_number_uprns}
-    return TitleRegisterData.query.filter(TitleRegisterData.title_number.in_(title_numbers)).all()
-
-
 def format_address_records(address_records):
     result = []
     for address_record in address_records:
-        if address_record.uprns:
-            titles = get_titles_for_uprns(address_record.uprns)
-            formatted_titles = []
-            for title in titles:
-                formatted_titles += [{
-                    'title_number': title.title_number,
-                    'data': title.register_data
-                }]
-            result += formatted_titles
+        if address_record.title_number:
+            title = get_title_register(address_record.title_number)
+            result += [{
+                'title_number': title.title_number,
+                'data': title.register_data
+            }]
     return {'titles': result}
 
 
