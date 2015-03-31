@@ -32,7 +32,7 @@ def get_property_address(postcode):
     client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
     search = Search(
         using=client, index='landregistry', doc_type='property_by_postcode')
-    query = search.filter('term', postcode=postcode)
+    query = search.query('match', postcode=postcode)
     return query.execute().hits
 
 
