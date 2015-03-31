@@ -52,10 +52,11 @@ def format_address_records(address_records):
     for address_record in address_records:
         if address_record.title_number:
             title = get_title_register(address_record.title_number)
-            result += [{
-                'title_number': title.title_number,
-                'data': title.register_data
-            }]
+            if title:
+                result += [{
+                    'title_number': title.title_number,
+                    'data': title.register_data
+                }]
     return {'titles': result}
 
 
