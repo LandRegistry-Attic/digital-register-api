@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 from service import app
 import os
-from flask import Flask, abort, jsonify, make_response
+from flask import Flask, abort, jsonify, make_response, Response
 import requests
 import json
+import logging
+import logging.config
 from sqlalchemy import Table, Column, String, create_engine
 import pg8000
 from service.models import TitleRegisterData
@@ -13,14 +15,28 @@ from service.models import TitleRegisterData, TitleNumbersUprns
 
 
 ELASTIC_SEARCH_ENDPOINT = app.config['ELASTIC_SEARCH_ENDPOINT']
-ADDRESS_KEY_FIELDS = ['organisation_name', 'sub_building_name', 'building_name',
-                      'building_number', 'dependent_thoroughfare_name',
-                      'thoroughfare_name', 'double_dependent_locality',
-                      'dependent_locality', 'post_town', 'postcode']
+INTERNAL_SERVER_ERROR_RESPONSE_BODY = json.dumps(
+    {'error': 'Internal server error'}
+)
+JSON_CONTENT_TYPE = 'application/json'
+LOGGER = logging.getLogger(__name__)
 
 
 def get_title_register(title_ref):
     return TitleRegisterData.query.get(title_ref)
+
+
+@app.errorhandler(Exception)
+def handleServerError(error):
+    LOGGER.error(
+        'An error occurred when processing a request',
+        exc_info=error
+    )
+    return Response(
+        INTERNAL_SERVER_ERROR_RESPONSE_BODY,
+        status=500,
+        mimetype=JSON_CONTENT_TYPE
+    )
 
 
 @app.route('/', methods=['GET'])
