@@ -6,7 +6,7 @@ from flask_migrate import Migrate, MigrateCommand
 from service import app, db
 
 # db.create_all() needs all models to be imported explicitly (not *)
-from service.models import TitleNumbersUprns, TitleRegisterData
+from service.models import TitleRegisterData
 
 
 migrate = Migrate(app, db)
