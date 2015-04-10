@@ -9,7 +9,7 @@ import pg8000
 from service.models import TitleRegisterData
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search
-from service.models import TitleRegisterData, TitleNumbersUprns
+from service.models import TitleRegisterData
 
 
 ELASTIC_SEARCH_ENDPOINT = app.config['ELASTIC_SEARCH_ENDPOINT']
