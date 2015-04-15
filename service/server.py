@@ -100,7 +100,3 @@ def get_properties(postcode):
         return jsonify(result)
     else:
         return jsonify({'titles': []})
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
