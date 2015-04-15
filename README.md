@@ -31,7 +31,23 @@ To run the acceptance tests for the Digital Register, go to the `acceptance-test
    ./run-tests.sh
 ```
 
-You will need to have a Postgres database running (see `db/lr-start-db` and `db/insert-fake-data` scripts in the [centos-dev-env](https://github.com/LandRegistry/centos-dev-env) project), as well as the digital-register-frontend and digital-register-api applications running on your development VM. 
+You will need to have a Postgres database running (see `db/lr-start-db` and `db/insert-fake-data` scripts in the [centos-dev-env](https://github.com/LandRegistry/centos-dev-env) project), as well as the digital-register-frontend and digital-register-api applications running on your development VM.
+ 
+## Run the server
+
+### Run in dev mode
+
+To run the server in dev mode, execute the following command:
+
+    ./run_flask_dev.sh
+
+### Run using gunicorn
+
+To run the server using gunicorn, activate your virtual environment
+and execute the following commands:
+
+    pip install gunicorn
+    gunicorn -p /tmp/gunicorn.pid service.server:app -c gunicorn_settings.py 
 
 ## Jenkins builds 
 
