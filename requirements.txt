@@ -11,3 +11,4 @@ sqlalchemy==0.9.8
 pg8000==1.10.1
 elasticsearch==1.4.0
 elasticsearch-dsl==0.0.3
+faulthandler==2.4
