@@ -9,7 +9,7 @@ import pg8000
 from service.models import TitleRegisterData
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search
-from service.models import TitleRegisterData, TitleNumbersUprns
+from service.models import TitleRegisterData
 
 
 ELASTIC_SEARCH_ENDPOINT = app.config['ELASTIC_SEARCH_ENDPOINT']
@@ -84,7 +84,3 @@ def get_properties(postcode):
         return jsonify(result)
     else:
         return jsonify({'titles': []})
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)

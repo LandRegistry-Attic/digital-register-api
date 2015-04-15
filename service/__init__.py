@@ -1,22 +1,15 @@
-import logging
-from logging import config
+import faulthandler
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
-import json
+from service import logging_config
+
 from config import CONFIG_DICT
 
-
-def setup_logging(logging_config_file_path):
-    if CONFIG_DICT['LOGGING']:
-        try:
-            with open(logging_config_file_path, 'rt') as file:
-                config = json.load(file)
-            logging.config.dictConfig(config)
-        except IOError as e:
-            raise(Exception('Failed to load logging configuration', e))
+# This causes the traceback to be written to stderr in case of faults
+faulthandler.enable()
 
 app = Flask(__name__)
 app.config.update(CONFIG_DICT)
 
 db = SQLAlchemy(app)
-setup_logging(app.config['LOGGING_CONFIG_FILE_PATH'])
+logging_config.setup_logging()
