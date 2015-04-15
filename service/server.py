@@ -58,17 +58,6 @@ def get_property_address(postcode):
     return query.execute().hits
 
 
-def format_address_into_single_string(address_record):
-    address = [
-        address_record.buildingNumber,
-        address_record.thoroughfareName,
-        address_record.postTown,
-        address_record.postCode
-    ]
-    formatted_address = ", ".join(address)
-    return formatted_address
-
-
 def format_address_records(address_records):
     result = []
     for address_record in address_records:
