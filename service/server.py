@@ -21,6 +21,12 @@ INTERNAL_SERVER_ERROR_RESPONSE_BODY = json.dumps(
 JSON_CONTENT_TYPE = 'application/json'
 LOGGER = logging.getLogger(__name__)
 
+TITLE_NOT_FOUND_RESPONSE = Response(
+    json.dumps({'error': 'Title not found'}),
+    status=404,
+    mimetype=JSON_CONTENT_TYPE
+)
+
 
 def get_title_register(title_ref):
     return TitleRegisterData.query.get(title_ref)
@@ -88,7 +94,7 @@ def get_title(title_ref):
         return jsonify(result)
     else:
         # Title not found
-        abort(404)
+        return TITLE_NOT_FOUND_RESPONSE
 
 
 @app.route('/title_search_postcode/<postcode>', methods=['GET'])
