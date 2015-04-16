@@ -21,6 +21,12 @@ INTERNAL_SERVER_ERROR_RESPONSE_BODY = json.dumps(
 JSON_CONTENT_TYPE = 'application/json'
 LOGGER = logging.getLogger(__name__)
 
+TITLE_NOT_FOUND_RESPONSE = Response(
+    json.dumps({'error': 'Title not found'}),
+    status=404,
+    mimetype=JSON_CONTENT_TYPE
+)
+
 
 def get_title_register(title_ref):
     return TitleRegisterData.query.get(title_ref)
@@ -52,17 +58,6 @@ def get_property_address(postcode):
     return query.execute().hits
 
 
-def format_address_into_single_string(address_record):
-    address = [
-        address_record.buildingNumber,
-        address_record.thoroughfareName,
-        address_record.postTown,
-        address_record.postCode
-    ]
-    formatted_address = ", ".join(address)
-    return formatted_address
-
-
 def format_address_records(address_records):
     result = []
     for address_record in address_records:
@@ -88,7 +83,7 @@ def get_title(title_ref):
         return jsonify(result)
     else:
         # Title not found
-        abort(404)
+        return TITLE_NOT_FOUND_RESPONSE
 
 
 @app.route('/title_search_postcode/<postcode>', methods=['GET'])
