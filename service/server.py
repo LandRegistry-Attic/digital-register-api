@@ -7,6 +7,7 @@ import json
 import logging
 import logging.config
 from sqlalchemy import Table, Column, String, create_engine
+from sqlalchemy.sql.expression import false
 import pg8000
 from service.models import TitleRegisterData
 from elasticsearch import Elasticsearch
@@ -29,7 +30,10 @@ TITLE_NOT_FOUND_RESPONSE = Response(
 
 
 def get_title_register(title_ref):
-    return TitleRegisterData.query.get(title_ref)
+    # Will retrieve the first matching title that is not marked as deleted
+    result = TitleRegisterData.query.filter(TitleRegisterData.title_number == title_ref,
+                                            TitleRegisterData.is_deleted == false()).first()
+    return result
 
 
 @app.errorhandler(Exception)
