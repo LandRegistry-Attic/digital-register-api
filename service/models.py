@@ -11,5 +11,5 @@ class TitleRegisterData(db.Model):
     last_modified = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now(),
                               nullable=False)
 
-Index('idx_title_number_and_last_modified', TitleRegisterData.title_number,
-      TitleRegisterData.last_modified)
+Index('idx_last_modified_and_title_number', TitleRegisterData.last_modified,
+      TitleRegisterData.title_number)

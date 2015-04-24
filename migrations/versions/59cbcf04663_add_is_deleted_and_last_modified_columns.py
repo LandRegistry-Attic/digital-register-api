@@ -29,8 +29,8 @@ def upgrade():
     op.execute(title_register_data.update().values(last_modified=sa.func.now()))
     op.alter_column('title_register_data', 'last_modified', nullable=False)
 
-    op.create_index('idx_title_number_and_last_modified', 'title_register_data',
-                    ['title_number', 'last_modified'], unique=False)
+    op.create_index('idx_last_modified_and_title_number', 'title_register_data',
+                    ['last_modified', 'title_number'], unique=False)
     ### end Alembic commands ###
 
 
