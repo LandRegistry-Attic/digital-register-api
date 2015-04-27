@@ -55,6 +55,7 @@ target/
 
 # IntelliJ Idea files
 .idea
+*.iml
 
 # .DS_Store files
 */.DS_Store
