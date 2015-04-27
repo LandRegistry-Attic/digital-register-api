@@ -11,7 +11,7 @@ from sqlalchemy.sql.expression import false
 import pg8000
 from service.models import TitleRegisterData
 from elasticsearch import Elasticsearch
-from elasticsearch_dsl import Search
+from elasticsearch_dsl import Search, Q
 from service.models import TitleRegisterData
 
 
@@ -61,6 +61,17 @@ def get_property_address(postcode):
     query = search.filter('term', postcode=postcode)
     return query.execute().hits
 
+def get_properties_for_address(address):
+    client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
+    search = Search(
+        using=client, index='landregistry', doc_type='property_by_address')
+    address_parts = address.split()
+    #In the future we might start weighting some words higher than others
+    #eg "Street" be low, if it is a structured address the house number should be high etc
+    word_queries = [~Q('match', address_string=address_part) for address_part in address_parts]
+    bool_address_query = Q('bool', should=word_queries)
+    query = search.query(bool_address_query)
+    return query.execute().hits
 
 def format_address_records(address_records):
     result = []
@@ -94,6 +105,15 @@ def get_title(title_ref):
 def get_properties(postcode):
     postcode = postcode.replace("_", "")
     address_records = get_property_address(postcode)
+    if address_records:
+        result = format_address_records(address_records)
+        return jsonify(result)
+    else:
+        return jsonify({'titles': []})
+
+@app.route('/title_search_address/<address>', methods=['GET'])
+def get_titles_for_address(address):
+    address_records = get_properties_for_address(address)
     if address_records:
         result = format_address_records(address_records)
         return jsonify(result)
