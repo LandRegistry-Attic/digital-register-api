@@ -53,7 +53,7 @@ def healthcheck():
 def get_property_address(postcode):
     client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
     search = Search(
-        using=client, index='landregistry', doc_type='property_by_postcode')
+        using=client, index='landregistry', doc_type='property_by_postcode_2')
     query = search.filter('term', postcode=postcode)
     return query.execute().hits
 
@@ -88,7 +88,7 @@ def get_title(title_ref):
 
 @app.route('/title_search_postcode/<postcode>', methods=['GET'])
 def get_properties(postcode):
-    postcode.replace("_", " ")
+    postcode = postcode.replace("_", "")
     address_records = get_property_address(postcode)
     if address_records:
         result = format_address_records(address_records)
