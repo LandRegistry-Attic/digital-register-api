@@ -5,6 +5,7 @@ password = os.environ['POSTGRES_PASSWORD']
 host = os.environ['POSTGRES_HOST']
 port = os.environ['POSTGRES_PORT']
 database = os.environ['POSTGRES_DB']
+max_number = os.environ['MAX_NUMBER_SEARCH_RESULTS']
 db_uri_template = 'postgresql+pg8000://{0}:{1}@{2}:{3}/{4}'
 sql_alchemy_uri = db_uri_template.format(user, password, host, port, database)
 logging_config_file_path = os.environ['LOGGING_CONFIG_FILE_PATH']
@@ -15,6 +16,7 @@ CONFIG_DICT = {
     'SQLALCHEMY_DATABASE_URI': sql_alchemy_uri,
     'LOGGING_CONFIG_FILE_PATH': logging_config_file_path,
     'ELASTIC_SEARCH_ENDPOINT': os.environ['ELASTIC_SEARCH_ENDPOINT'],
+    'MAX_NUMBER_SEARCH_RESULTS': os.environ['MAX_NUMBER_SEARCH_RESULTS']
 }
 
 settings = os.environ.get('SETTINGS')

@@ -14,6 +14,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search, Q
 from service.models import TitleRegisterData
 
+MAX_NUMBER_SEARCH_RESULTS = app.config['MAX_NUMBER_SEARCH_RESULTS']
 
 ELASTIC_SEARCH_ENDPOINT = app.config['ELASTIC_SEARCH_ENDPOINT']
 INTERNAL_SERVER_ERROR_RESPONSE_BODY = json.dumps(
@@ -58,31 +59,42 @@ def get_property_address(postcode):
     client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
     search = Search(
         using=client, index='landregistry', doc_type='property_by_postcode_2')
+    max_number = int(MAX_NUMBER_SEARCH_RESULTS)
+    search = search[0:max_number]
     query = search.filter('term', postcode=postcode)
     return query.execute().hits
+
 
 def get_properties_for_address(address):
     client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
     search = Search(
         using=client, index='landregistry', doc_type='property_by_address')
+    max_number = int(MAX_NUMBER_SEARCH_RESULTS)
+    search = search[0:max_number]
     address_parts = address.split()
-    #In the future we might start weighting some words higher than others
-    #eg "Street" be low, if it is a structured address the house number should be high etc
+    # In the future we might start weighting some words higher than others
+    # eg "Street" be low, if it is a structured address the house number should be high etc
     word_queries = [~Q('match', address_string=address_part) for address_part in address_parts]
     bool_address_query = Q('bool', should=word_queries)
     query = search.query(bool_address_query)
     return query.execute().hits
 
+
 def format_address_records(address_records):
     result = []
+    # Only one address record per title number
+    result_title_nums = []
     for address_record in address_records:
         if address_record.title_number:
-            title = get_title_register(address_record.title_number)
-            if title:
-                result += [{
-                    'title_number': title.title_number,
-                    'data': title.register_data
-                }]
+            title_number = address_record.title_number
+            if title_number not in result_title_nums:
+                result_title_nums.append(title_number)
+                title = get_title_register(title_number)
+                if title:
+                    result += [{
+                        'title_number': title.title_number,
+                        'data': title.register_data
+                    }]
     return {'titles': result}
 
 
@@ -110,6 +122,7 @@ def get_properties(postcode):
         return jsonify(result)
     else:
         return jsonify({'titles': []})
+
 
 @app.route('/title_search_address/<address>', methods=['GET'])
 def get_titles_for_address(address):
