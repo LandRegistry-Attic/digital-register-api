@@ -92,8 +92,9 @@ def get_title(title_ref):
 
 @app.route('/title_search_postcode/<postcode>', methods=['GET'])
 def get_properties(postcode):
-    postcode = postcode.replace("_", "")
-    address_records = get_property_address(postcode)
+    no_underscores = postcode.replace("_", "")
+    no_spaces = no_underscores.replace(" ", "")
+    address_records = get_property_address(no_spaces)
     if address_records:
         result = format_address_records(address_records)
         return jsonify(result)
