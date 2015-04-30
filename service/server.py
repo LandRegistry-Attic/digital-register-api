@@ -56,21 +56,13 @@ def healthcheck():
 
 
 def get_property_address(postcode):
-    client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
-    search = Search(
-        using=client, index='landregistry', doc_type='property_by_postcode_2')
-    max_number = int(MAX_NUMBER_SEARCH_RESULTS)
-    search = search[0:max_number]
+    search = create_search('property_by_postcode_2')
     query = search.filter('term', postcode=postcode)
     return query.execute().hits
 
 
 def get_properties_for_address(address):
-    client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
-    search = Search(
-        using=client, index='landregistry', doc_type='property_by_address')
-    max_number = int(MAX_NUMBER_SEARCH_RESULTS)
-    search = search[0:max_number]
+    search = create_search('property_by_address')
     address_parts = address.split()
     # In the future we might start weighting some words higher than others
     # eg "Street" be low, if it is a structured address the house number should be high etc
@@ -96,6 +88,15 @@ def format_address_records(address_records):
                         'data': title.register_data
                     }]
     return {'titles': result}
+
+
+def create_search(doc_type):
+    client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
+    search = Search(
+        using=client, index='landregistry', doc_type=doc_type)
+    max_number = int(MAX_NUMBER_SEARCH_RESULTS)
+    search = search[0:max_number]
+    return search
 
 
 @app.route('/titles/<title_ref>', methods=['GET'])
