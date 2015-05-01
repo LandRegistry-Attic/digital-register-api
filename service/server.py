@@ -95,7 +95,7 @@ def create_search(doc_type):
     search = Search(
         using=client, index='landregistry', doc_type=doc_type)
     max_number = int(MAX_NUMBER_SEARCH_RESULTS)
-    search = search[0:max_number]
+    search = search[0:max_number-1]
     return search
 
 
