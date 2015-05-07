@@ -21,6 +21,9 @@
   },
   "loggers": {
     "service": {
+    },
+    "elasticsearch.trace": {
+        "level": "WARN"
     }
   },
   "root": {

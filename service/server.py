@@ -7,12 +7,14 @@ import json
 import logging
 import logging.config
 from sqlalchemy import Table, Column, String, create_engine
+from sqlalchemy.sql.expression import false
 import pg8000
 from service.models import TitleRegisterData
 from elasticsearch import Elasticsearch
-from elasticsearch_dsl import Search
+from elasticsearch_dsl import Search, Q
 from service.models import TitleRegisterData
 
+MAX_NUMBER_SEARCH_RESULTS = app.config['MAX_NUMBER_SEARCH_RESULTS']
 
 ELASTIC_SEARCH_ENDPOINT = app.config['ELASTIC_SEARCH_ENDPOINT']
 INTERNAL_SERVER_ERROR_RESPONSE_BODY = json.dumps(
@@ -21,9 +23,18 @@ INTERNAL_SERVER_ERROR_RESPONSE_BODY = json.dumps(
 JSON_CONTENT_TYPE = 'application/json'
 LOGGER = logging.getLogger(__name__)
 
+TITLE_NOT_FOUND_RESPONSE = Response(
+    json.dumps({'error': 'Title not found'}),
+    status=404,
+    mimetype=JSON_CONTENT_TYPE
+)
+
 
 def get_title_register(title_ref):
-    return TitleRegisterData.query.get(title_ref)
+    # Will retrieve the first matching title that is not marked as deleted
+    result = TitleRegisterData.query.filter(TitleRegisterData.title_number == title_ref,
+                                            TitleRegisterData.is_deleted == false()).first()
+    return result
 
 
 @app.errorhandler(Exception)
@@ -45,35 +56,47 @@ def healthcheck():
 
 
 def get_property_address(postcode):
-    client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
-    search = Search(
-        using=client, index='landregistry', doc_type='property_by_postcode')
+    search = create_search('property_by_postcode_2')
     query = search.filter('term', postcode=postcode)
     return query.execute().hits
 
 
-def format_address_into_single_string(address_record):
-    address = [
-        address_record.buildingNumber,
-        address_record.thoroughfareName,
-        address_record.postTown,
-        address_record.postCode
-    ]
-    formatted_address = ", ".join(address)
-    return formatted_address
+def get_properties_for_address(address):
+    search = create_search('property_by_address')
+    address_parts = address.split()
+    # In the future we might start weighting some words higher than others
+    # eg "Street" be low, if it is a structured address the house number should be high etc
+    word_queries = [~Q('match', address_string=address_part) for address_part in address_parts]
+    bool_address_query = Q('bool', should=word_queries)
+    query = search.query(bool_address_query)
+    return query.execute().hits
 
 
 def format_address_records(address_records):
     result = []
+    # Only one address record per title number
+    result_title_nums = []
     for address_record in address_records:
         if address_record.title_number:
-            title = get_title_register(address_record.title_number)
-            if title:
-                result += [{
-                    'title_number': title.title_number,
-                    'data': title.register_data
-                }]
+            title_number = address_record.title_number
+            if title_number not in result_title_nums:
+                result_title_nums.append(title_number)
+                title = get_title_register(title_number)
+                if title:
+                    result += [{
+                        'title_number': title.title_number,
+                        'data': title.register_data
+                    }]
     return {'titles': result}
+
+
+def create_search(doc_type):
+    client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
+    search = Search(
+        using=client, index='landregistry', doc_type=doc_type)
+    max_number = int(MAX_NUMBER_SEARCH_RESULTS)
+    search = search[0:max_number-1]
+    return search
 
 
 @app.route('/titles/<title_ref>', methods=['GET'])
@@ -88,19 +111,26 @@ def get_title(title_ref):
         return jsonify(result)
     else:
         # Title not found
-        abort(404)
+        return TITLE_NOT_FOUND_RESPONSE
 
 
 @app.route('/title_search_postcode/<postcode>', methods=['GET'])
 def get_properties(postcode):
-    postcode.replace("_", " ")
-    address_records = get_property_address(postcode)
+    no_underscores = postcode.replace("_", "")
+    no_spaces = no_underscores.replace(" ", "")
+    address_records = get_property_address(no_spaces)
     if address_records:
         result = format_address_records(address_records)
         return jsonify(result)
     else:
         return jsonify({'titles': []})
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+
+@app.route('/title_search_address/<address>', methods=['GET'])
+def get_titles_for_address(address):
+    address_records = get_properties_for_address(address)
+    if address_records:
+        result = format_address_records(address_records)
+        return jsonify(result)
+    else:
+        return jsonify({'titles': []})

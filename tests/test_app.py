@@ -42,6 +42,7 @@ class ViewTitleTestCase(unittest.TestCase):
     def test_get_invalid_title_path_404(self, mock_data):
         response = self.app.get('/titles/invalid-ref')
         assert response.status_code == 404
+        assert '"error": "Title not found"' in response.data.decode()
 
     # 200 status code when a record is found by the database query
     @mock.patch('service.server.get_title_register', return_value=DN1000_title)
