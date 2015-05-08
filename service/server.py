@@ -63,12 +63,7 @@ def get_property_address(postcode):
 
 def get_properties_for_address(address):
     search = create_search('property_by_address')
-    address_parts = address.split()
-    # In the future we might start weighting some words higher than others
-    # eg "Street" be low, if it is a structured address the house number should be high etc
-    word_queries = [~Q('match', address_string=address_part) for address_part in address_parts]
-    bool_address_query = Q('bool', should=word_queries)
-    query = search.query(bool_address_query)
+    query = search.query('match', address_string=address)
     return query.execute().hits
 
 
