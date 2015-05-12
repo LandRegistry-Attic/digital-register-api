@@ -13,6 +13,7 @@ from service.models import TitleRegisterData
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search, Q
 from service.models import TitleRegisterData
+import math
 
 MAX_NUMBER_SEARCH_RESULTS = app.config['MAX_NUMBER_SEARCH_RESULTS']
 SEARCH_RESULTS_PER_PAGE = app.config['SEARCH_RESULTS_PER_PAGE']
@@ -70,14 +71,15 @@ def get_properties_for_address(address):
 
 def paginated_address_records(address_records, page_number):
     start_index = (page_number-1)*int(SEARCH_RESULTS_PER_PAGE)
-    end_index = max(page_number*int(SEARCH_RESULTS_PER_PAGE), len(address_records)-1)
+    end_index = page_number*int(SEARCH_RESULTS_PER_PAGE)
     return format_address_records(address_records[start_index:end_index])
 
 
 def paginated_and_index_address_records(address_records, page_number):
     if address_records:
+        number_pages = math.ceil(len(address_records) / int(SEARCH_RESULTS_PER_PAGE))
+        page_number = min(page_number, number_pages)
         result = paginated_address_records(address_records, page_number)
-        number_pages = int(len(address_records) / int(SEARCH_RESULTS_PER_PAGE))+1
         result["number_pages"] = number_pages
         result["page_number"] = page_number
         result["number_results"] = len(address_records)
@@ -129,7 +131,7 @@ def get_title(title_ref):
 
 @app.route('/title_search_postcode/<postcode>', methods=['GET'])
 def get_properties(postcode):
-    page_number = request.args.get('page', 1)
+    page_number = int(request.args.get('page', 1))
     no_underscores = postcode.replace("_", "")
     no_spaces = no_underscores.replace(" ", "")
     address_records = get_property_address(no_spaces)
@@ -139,7 +141,7 @@ def get_properties(postcode):
 
 @app.route('/title_search_address/<address>', methods=['GET'])
 def get_titles_for_address(address):
-    page_number = request.args.get('page', 1)
+    page_number = int(request.args.get('page', 1))
     address_records = get_properties_for_address(address)
     result = paginated_and_index_address_records(address_records, page_number)
     return jsonify(result)

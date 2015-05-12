@@ -31,6 +31,8 @@ single_elastic_search_hit = [
     ),
 ]
 
+twenty_one_elastic_search_hits = 21*single_elastic_search_hit
+
 
 class ViewTitleTestCase(unittest.TestCase):
 
@@ -108,3 +110,66 @@ class ViewTitleTestCase(unittest.TestCase):
         assert titles[0]['data'] == 'data'
         assert page_number == 1
         assert number_pages == 1
+
+    @mock.patch('service.server.get_property_address', return_value=twenty_one_elastic_search_hits)
+    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    def test_postcode_search_with_21_matches(self, mock_data, mock_title):
+        response = self.app.get('/title_search_postcode/PL9_8TB')
+        response_json = json.loads(response.data.decode())
+        titles = response_json['titles']
+        page_number = response_json['page_number']
+        number_pages = response_json['number_pages']
+        number_results = response_json['number_results']
+        assert titles[0]['data'] == 'data'
+        assert len(titles) == 20
+        assert page_number == 1
+        assert number_pages == 2
+        assert number_results == 21
+
+    @mock.patch('service.server.get_property_address', return_value=twenty_one_elastic_search_hits)
+    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    def test_postcode_search_with_21_matches_page_2(self, mock_data, mock_title):
+        response = self.app.get('/title_search_postcode/PL9_8TB?page=2')
+        response_json = json.loads(response.data.decode())
+        titles = response_json['titles']
+        page_number = response_json['page_number']
+        number_pages = response_json['number_pages']
+        number_results = response_json['number_results']
+        assert titles[0]['data'] == 'data'
+        assert len(titles) == 1
+        assert page_number == 2
+        assert number_pages == 2
+        assert number_results == 21
+
+    @mock.patch('service.server.get_property_address', return_value=twenty_one_elastic_search_hits)
+    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    def test_postcode_search_with_21_matches_page_50(self, mock_data, mock_title):
+        response = self.app.get('/title_search_postcode/PL9_8TB?page=50')
+        response_json = json.loads(response.data.decode())
+        titles = response_json['titles']
+        page_number = response_json['page_number']
+        number_pages = response_json['number_pages']
+        number_results = response_json['number_results']
+        assert titles[0]['data'] == 'data'
+        assert len(titles) == 1
+        assert page_number == 2
+        assert number_pages == 2
+        assert number_results == 21
+
+    @mock.patch(
+        'service.server.get_properties_for_address',
+        return_value=twenty_one_elastic_search_hits
+    )
+    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    def test_address_search_with_21_matches_page_2(self, mock_data, mock_title):
+        response = self.app.get('/title_search_address/PL9_8TB?page=2')
+        response_json = json.loads(response.data.decode())
+        titles = response_json['titles']
+        page_number = response_json['page_number']
+        number_pages = response_json['number_pages']
+        number_results = response_json['number_results']
+        assert titles[0]['data'] == 'data'
+        assert len(titles) == 1
+        assert page_number == 2
+        assert number_pages == 2
+        assert number_results == 21
