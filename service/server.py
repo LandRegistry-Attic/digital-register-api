@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from service import app
 import os
-from flask import Flask, abort, jsonify, make_response, Response
+from flask import Flask, abort, jsonify, make_response, Response, request
 import requests
 import json
 import logging
@@ -15,6 +15,7 @@ from elasticsearch_dsl import Search, Q
 from service.models import TitleRegisterData
 
 MAX_NUMBER_SEARCH_RESULTS = app.config['MAX_NUMBER_SEARCH_RESULTS']
+SEARCH_RESULTS_PER_PAGE = app.config['SEARCH_RESULTS_PER_PAGE']
 
 ELASTIC_SEARCH_ENDPOINT = app.config['ELASTIC_SEARCH_ENDPOINT']
 INTERNAL_SERVER_ERROR_RESPONSE_BODY = json.dumps(
@@ -67,21 +68,38 @@ def get_properties_for_address(address):
     return query.execute().hits
 
 
+def paginated_address_records(address_records, page_number):
+    start_index = (page_number-1)*int(SEARCH_RESULTS_PER_PAGE)
+    end_index = max(page_number*int(SEARCH_RESULTS_PER_PAGE), len(address_records)-1)
+    return format_address_records(address_records[start_index:end_index])
+
+
+def paginated_and_index_address_records(address_records, page_number):
+    if address_records:
+        result = paginated_address_records(address_records, page_number)
+        number_pages = int(len(address_records) / int(SEARCH_RESULTS_PER_PAGE))+1
+        result["number_pages"] = number_pages
+        result["page_number"] = page_number
+        result["number_results"] = len(address_records)
+    else:
+        result = {'titles': []}
+        result["number_pages"] = 0
+        result["page_number"] = 0
+        result["number_results"] = 0
+    return result
+
+
 def format_address_records(address_records):
     result = []
-    # Only one address record per title number
-    result_title_nums = []
     for address_record in address_records:
         if address_record.title_number:
             title_number = address_record.title_number
-            if title_number not in result_title_nums:
-                result_title_nums.append(title_number)
-                title = get_title_register(title_number)
-                if title:
-                    result += [{
-                        'title_number': title.title_number,
-                        'data': title.register_data
-                    }]
+            title = get_title_register(title_number)
+            if title:
+                result += [{
+                    'title_number': title.title_number,
+                    'data': title.register_data
+                }]
     return {'titles': result}
 
 
@@ -111,21 +129,17 @@ def get_title(title_ref):
 
 @app.route('/title_search_postcode/<postcode>', methods=['GET'])
 def get_properties(postcode):
+    page_number = request.args.get('page', 1)
     no_underscores = postcode.replace("_", "")
     no_spaces = no_underscores.replace(" ", "")
     address_records = get_property_address(no_spaces)
-    if address_records:
-        result = format_address_records(address_records)
-        return jsonify(result)
-    else:
-        return jsonify({'titles': []})
+    result = paginated_and_index_address_records(address_records, page_number)
+    return jsonify(result)
 
 
 @app.route('/title_search_address/<address>', methods=['GET'])
 def get_titles_for_address(address):
+    page_number = request.args.get('page', 1)
     address_records = get_properties_for_address(address)
-    if address_records:
-        result = format_address_records(address_records)
-        return jsonify(result)
-    else:
-        return jsonify({'titles': []})
+    result = paginated_and_index_address_records(address_records, page_number)
+    return jsonify(result)

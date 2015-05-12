@@ -73,7 +73,11 @@ class ViewTitleTestCase(unittest.TestCase):
         assert response.status_code == 200
         response_json = json.loads(response.data.decode())
         titles = response_json['titles']
+        page_number = response_json['page_number']
+        number_pages = response_json['number_pages']
         assert titles == []
+        assert page_number == 0
+        assert number_pages == 0
 
     @mock.patch('service.server.get_property_address', return_value=single_elastic_search_hit)
     @mock.patch('service.server.get_title_register', return_value=DN1000_title)
@@ -87,7 +91,11 @@ class ViewTitleTestCase(unittest.TestCase):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         response_json = json.loads(response.data.decode())
         titles = response_json['titles']
+        page_number = response_json['page_number']
+        number_pages = response_json['number_pages']
         assert titles[0]['title_number'] == 'DN1000'
+        assert page_number == 1
+        assert number_pages == 1
 
     @mock.patch('service.server.get_property_address', return_value=single_elastic_search_hit)
     @mock.patch('service.server.get_title_register', return_value=DN1000_title)
@@ -95,4 +103,8 @@ class ViewTitleTestCase(unittest.TestCase):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         response_json = json.loads(response.data.decode())
         titles = response_json['titles']
+        page_number = response_json['page_number']
+        number_pages = response_json['number_pages']
         assert titles[0]['data'] == 'data'
+        assert page_number == 1
+        assert number_pages == 1
