@@ -9,4 +9,3 @@ export LOGGING_CONFIG_FILE_PATH='logging_config.json'
 export ELASTIC_SEARCH_ENDPOINT='http://localhost:9200'
 export MAX_NUMBER_SEARCH_RESULTS=50
 export PYTHONPATH=.
-export SEARCH_RESULTS_PER_PAGE=20
