@@ -10,12 +10,14 @@ search_results = os.environ['SEARCH_RESULTS_PER_PAGE']
 db_uri_template = 'postgresql+pg8000://{0}:{1}@{2}:{3}/{4}'
 sql_alchemy_uri = db_uri_template.format(user, password, host, port, database)
 logging_config_file_path = os.environ['LOGGING_CONFIG_FILE_PATH']
+fault_log_file_path = os.environ['FAULT_LOG_FILE_PATH']
 
 CONFIG_DICT = {
     'DEBUG': False,
     'LOGGING': True,
     'SQLALCHEMY_DATABASE_URI': sql_alchemy_uri,
     'LOGGING_CONFIG_FILE_PATH': logging_config_file_path,
+    'FAULT_LOG_FILE_PATH': fault_log_file_path,
     'ELASTIC_SEARCH_ENDPOINT': os.environ['ELASTIC_SEARCH_ENDPOINT'],
     'MAX_NUMBER_SEARCH_RESULTS': max_number,
     'SEARCH_RESULTS_PER_PAGE': search_results,
@@ -29,3 +31,4 @@ elif settings == 'test':
     CONFIG_DICT['LOGGING'] = False
     CONFIG_DICT['DEBUG'] = True
     CONFIG_DICT['TESTING'] = True
+    CONFIG_DICT['FAULT_LOG_FILE_PATH'] = '/dev/null'
