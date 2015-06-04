@@ -33,10 +33,13 @@ TITLE_NOT_FOUND_RESPONSE = Response(
 
 
 def get_title_register(title_ref):
-    # Will retrieve the first matching title that is not marked as deleted
-    result = TitleRegisterData.query.filter(TitleRegisterData.title_number == title_ref,
-                                            TitleRegisterData.is_deleted == false()).first()
-    return result
+    if title_ref:
+        # Will retrieve the first matching title that is not marked as deleted
+        result = TitleRegisterData.query.filter(TitleRegisterData.title_number == title_ref,
+                                                TitleRegisterData.is_deleted == false()).first()
+        return result
+    else:
+        raise TypeError('Title number must not be None.')
 
 
 @app.errorhandler(Exception)
@@ -70,7 +73,7 @@ def get_properties_for_address(address):
 
 
 def paginated_address_records(address_records, page_number):
-    titles = [get_title_register(rec.title_number) for rec in address_records if rec.title_number]
+    titles = [get_title_register(rec.title_number) for rec in address_records]
     title_dicts = [{'title_number': t.title_number, 'data': t.register_data} for t in titles if t]
 
     nof_results = len(title_dicts)
