@@ -33,10 +33,13 @@ TITLE_NOT_FOUND_RESPONSE = Response(
 
 
 def get_title_register(title_ref):
-    # Will retrieve the first matching title that is not marked as deleted
-    result = TitleRegisterData.query.filter(TitleRegisterData.title_number == title_ref,
-                                            TitleRegisterData.is_deleted == false()).first()
-    return result
+    if title_ref:
+        # Will retrieve the first matching title that is not marked as deleted
+        result = TitleRegisterData.query.filter(TitleRegisterData.title_number == title_ref,
+                                                TitleRegisterData.is_deleted == false()).first()
+        return result
+    else:
+        raise TypeError('Title number must not be None.')
 
 
 @app.errorhandler(Exception)
@@ -70,47 +73,38 @@ def get_properties_for_address(address):
 
 
 def paginated_address_records(address_records, page_number):
-    start_index = (page_number-1)*int(SEARCH_RESULTS_PER_PAGE)
-    end_index = page_number*int(SEARCH_RESULTS_PER_PAGE)
-    return format_address_records(address_records[start_index:end_index])
+    titles = [get_title_register(rec.title_number) for rec in address_records]
+    title_dicts = [{'title_number': t.title_number, 'data': t.register_data} for t in titles if t]
+
+    nof_results = len(title_dicts)
+    number_pages = math.ceil(nof_results / SEARCH_RESULTS_PER_PAGE)
+    page_number = min(page_number, number_pages)
+
+    start_index = (page_number - 1) * SEARCH_RESULTS_PER_PAGE
+    end_index = page_number * SEARCH_RESULTS_PER_PAGE
+
+    title_dicts_on_page = title_dicts[start_index:end_index]
+
+    return {
+        'titles': title_dicts_on_page,
+        'number_pages': number_pages,
+        'page_number': page_number,
+        'number_results': nof_results,
+    }
 
 
 def paginated_and_index_address_records(address_records, page_number):
     if address_records:
-        number_pages = math.ceil(len(address_records) / int(SEARCH_RESULTS_PER_PAGE))
-        page_number = min(page_number, number_pages)
         result = paginated_address_records(address_records, page_number)
-        result["number_pages"] = number_pages
-        result["page_number"] = page_number
-        result["number_results"] = len(address_records)
     else:
-        result = {'titles': []}
-        result["number_pages"] = 0
-        result["page_number"] = 0
-        result["number_results"] = 0
+        result = {'titles': [], 'number_pages': 0, 'page_number': 0, 'number_results': 0}
     return result
-
-
-def format_address_records(address_records):
-    result = []
-    for address_record in address_records:
-        if address_record.title_number:
-            title_number = address_record.title_number
-            title = get_title_register(title_number)
-            if title:
-                result += [{
-                    'title_number': title.title_number,
-                    'data': title.register_data
-                }]
-    return {'titles': result}
 
 
 def create_search(doc_type):
     client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
-    search = Search(
-        using=client, index='landregistry', doc_type=doc_type)
-    max_number = int(MAX_NUMBER_SEARCH_RESULTS)
-    search = search[0:max_number]
+    search = Search(using=client, index='landregistry', doc_type=doc_type)
+    search = search[0:MAX_NUMBER_SEARCH_RESULTS]
     return search
 
 
