@@ -1,4 +1,4 @@
-from service.server import app, get_property_address
+from service.server import app, get_property_address, paginated_address_records
 from collections import namedtuple
 import unittest
 import json
@@ -173,3 +173,15 @@ class ViewTitleTestCase(unittest.TestCase):
         assert page_number == 2
         assert number_pages == 2
         assert number_results == 21
+
+    def test_pagination_with_deleted_records(self):
+        address_records = [FakeTitleRegisterData(i, {'title_number': i}, {}) for i in range(200)]
+
+        def fake_get_title_register(t):
+            return FakeTitleRegisterData(t, {'title_number': t}, {}) if t % 2 else None
+
+        with mock.patch('service.server.get_title_register', fake_get_title_register):
+            recs = paginated_address_records(address_records, 3)
+        assert recs['page_number'] == 3
+        assert recs['number_pages'] == 5
+        assert recs['number_results'] == 100
