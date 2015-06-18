@@ -61,8 +61,16 @@ def healthcheck():
 
 
 def get_property_address(postcode):
-    search = create_search('property_by_postcode_2')
-    query = search.filter('term', postcode=postcode)
+    search = create_search('property_by_postcode_3')
+    query = search.filter('term', postcode=postcode).sort(
+        'street_name',
+        'house_no',
+        'house_alpha',
+        'street_name_2',
+        'secondary_house_no',
+        'secondary_house_alpha',
+        'first_number_in_address_string'
+    )
     return query.execute().hits
 
 
