@@ -69,6 +69,8 @@ def get_property_address(postcode):
         'street_name_2',
         'secondary_house_no',
         'secondary_house_alpha',
+        'sub_building_no',
+        'sub_building_description',
         'first_number_in_address_string'
     )
     return query.execute().hits
