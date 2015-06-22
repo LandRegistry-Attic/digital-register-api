@@ -60,9 +60,20 @@ def healthcheck():
     return "OK"
 
 
-def get_property_address(postcode):
-    search = create_search('property_by_postcode_2')
-    query = search.filter('term', postcode=postcode)
+def get_properties_for_postcode(postcode):
+    search = create_search('property_by_postcode_3')
+    query = search.filter('term', postcode=postcode).sort(
+        {'street_name': {'missing': '_last'}},
+        {'house_no': {'missing': '_last'}},
+        {'house_alpha': {'missing': '_last'}},
+        {'street_name_2': {'missing': '_last'}},
+        {'secondary_house_no': {'missing': '_last'}},
+        {'secondary_house_alpha': {'missing': '_last'}},
+        {'sub_building_no': {'missing': '_last'}},
+        {'sub_building_description': {'missing': '_last'}},
+        {'first_number_in_address_string': {'missing': '_last'}},
+        {'address_string': {'missing': '_last'}}
+    )
     return query.execute().hits
 
 
@@ -128,7 +139,7 @@ def get_properties(postcode):
     page_number = int(request.args.get('page', 1))
     no_underscores = postcode.replace("_", "")
     no_spaces = no_underscores.replace(" ", "")
-    address_records = get_property_address(no_spaces)
+    address_records = get_properties_for_postcode(no_spaces)
     result = paginated_and_index_address_records(address_records, page_number)
     return jsonify(result)
 

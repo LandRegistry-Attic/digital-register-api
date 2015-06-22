@@ -1,4 +1,4 @@
-from service.server import app, get_property_address, paginated_address_records
+from service.server import app, get_properties_for_postcode, paginated_address_records
 from collections import namedtuple
 import unittest
 import json
@@ -69,7 +69,7 @@ class ViewTitleTestCase(unittest.TestCase):
         assert '"geometry_data": "geometry"' in page_content
 
     # 200 with empty result when the database query does not return anything
-    @mock.patch('service.server.get_property_address', return_value=no_elastic_search_hits)
+    @mock.patch('service.server.get_properties_for_postcode', return_value=no_elastic_search_hits)
     def test_get_invalid_property_path_empty_result(self, mock_data):
         response = self.app.get('/title_search_postcode/invalid-postcode')
         assert response.status_code == 200
@@ -81,13 +81,19 @@ class ViewTitleTestCase(unittest.TestCase):
         assert page_number == 0
         assert number_pages == 0
 
-    @mock.patch('service.server.get_property_address', return_value=single_elastic_search_hit)
+    @mock.patch(
+        'service.server.get_properties_for_postcode',
+        return_value=single_elastic_search_hit
+    )
     @mock.patch('service.server.get_title_register', return_value=DN1000_title)
     def test_get_valid_property_path(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         assert response.status_code == 200
 
-    @mock.patch('service.server.get_property_address', return_value=single_elastic_search_hit)
+    @mock.patch(
+        'service.server.get_properties_for_postcode',
+        return_value=single_elastic_search_hit
+    )
     @mock.patch('service.server.get_title_register', return_value=DN1000_title)
     def test_get_single_uprn_title_match(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB')
@@ -99,7 +105,10 @@ class ViewTitleTestCase(unittest.TestCase):
         assert page_number == 1
         assert number_pages == 1
 
-    @mock.patch('service.server.get_property_address', return_value=single_elastic_search_hit)
+    @mock.patch(
+        'service.server.get_properties_for_postcode',
+        return_value=single_elastic_search_hit
+    )
     @mock.patch('service.server.get_title_register', return_value=DN1000_title)
     def test_get_title_data_with_uprn_match(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB')
@@ -111,7 +120,10 @@ class ViewTitleTestCase(unittest.TestCase):
         assert page_number == 1
         assert number_pages == 1
 
-    @mock.patch('service.server.get_property_address', return_value=twenty_one_elastic_search_hits)
+    @mock.patch(
+        'service.server.get_properties_for_postcode',
+        return_value=twenty_one_elastic_search_hits
+    )
     @mock.patch('service.server.get_title_register', return_value=DN1000_title)
     def test_postcode_search_with_21_matches(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB')
@@ -126,7 +138,10 @@ class ViewTitleTestCase(unittest.TestCase):
         assert number_pages == 2
         assert number_results == 21
 
-    @mock.patch('service.server.get_property_address', return_value=twenty_one_elastic_search_hits)
+    @mock.patch(
+        'service.server.get_properties_for_postcode',
+        return_value=twenty_one_elastic_search_hits
+    )
     @mock.patch('service.server.get_title_register', return_value=DN1000_title)
     def test_postcode_search_with_21_matches_page_2(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB?page=2')
@@ -141,7 +156,10 @@ class ViewTitleTestCase(unittest.TestCase):
         assert number_pages == 2
         assert number_results == 21
 
-    @mock.patch('service.server.get_property_address', return_value=twenty_one_elastic_search_hits)
+    @mock.patch(
+        'service.server.get_properties_for_postcode',
+        return_value=twenty_one_elastic_search_hits
+    )
     @mock.patch('service.server.get_title_register', return_value=DN1000_title)
     def test_postcode_search_with_21_matches_page_50(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB?page=50')
