@@ -1,11 +1,10 @@
-from service.server import app, get_properties_for_postcode, paginated_address_records
 from collections import namedtuple
 import unittest
 import json
-
 import mock
-import requests
-import responses
+from service import app
+from service.server import paginated_address_records
+
 
 register_fields = ['title_number', 'register_data', 'geometry_data']
 FakeTitleRegisterData = namedtuple('TitleRegisterData', register_fields)
@@ -40,28 +39,28 @@ class ViewTitleTestCase(unittest.TestCase):
         self.app = app.test_client()
 
     # 404 status code when the database query does not return anything
-    @mock.patch('service.server.get_title_register', return_value=None)
+    @mock.patch('service.server.db_access.get_title_register', return_value=None)
     def test_get_invalid_title_path_404(self, mock_data):
         response = self.app.get('/titles/invalid-ref')
         assert response.status_code == 404
         assert '"error": "Title not found"' in response.data.decode()
 
     # 200 status code when a record is found by the database query
-    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
     def test_get_valid_title_path(self, mock_data):
         response = self.app.get('/titles/DN1000')
         assert response.status_code == 200
 
     # The title number returned from the database query is returned in the JSON
     # response
-    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
     def test_get_correct_title_number(self, mock_data):
         response = self.app.get('/titles/DN1000')
         assert '"title_number": "DN1000"' in response.data.decode()
 
     # The data and geometry JSON blobs returned from the database query
     # are returned in the JSON response
-    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
     def test_get_correct_register_data(self, mock_data):
         response = self.app.get('/titles/DN1000')
         page_content = response.data.decode()
@@ -69,7 +68,8 @@ class ViewTitleTestCase(unittest.TestCase):
         assert '"geometry_data": "geometry"' in page_content
 
     # 200 with empty result when the database query does not return anything
-    @mock.patch('service.server.get_properties_for_postcode', return_value=no_elastic_search_hits)
+    @mock.patch('service.server.es_access.get_properties_for_postcode',
+                return_value=no_elastic_search_hits)
     def test_get_invalid_property_path_empty_result(self, mock_data):
         response = self.app.get('/title_search_postcode/invalid-postcode')
         assert response.status_code == 200
@@ -81,20 +81,16 @@ class ViewTitleTestCase(unittest.TestCase):
         assert page_number == 0
         assert number_pages == 0
 
-    @mock.patch(
-        'service.server.get_properties_for_postcode',
-        return_value=single_elastic_search_hit
-    )
-    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    @mock.patch('service.server.es_access.get_properties_for_postcode',
+                return_value=single_elastic_search_hit)
+    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
     def test_get_valid_property_path(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         assert response.status_code == 200
 
-    @mock.patch(
-        'service.server.get_properties_for_postcode',
-        return_value=single_elastic_search_hit
-    )
-    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    @mock.patch('service.server.es_access.get_properties_for_postcode',
+                return_value=single_elastic_search_hit)
+    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
     def test_get_single_uprn_title_match(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         response_json = json.loads(response.data.decode())
@@ -105,11 +101,9 @@ class ViewTitleTestCase(unittest.TestCase):
         assert page_number == 1
         assert number_pages == 1
 
-    @mock.patch(
-        'service.server.get_properties_for_postcode',
-        return_value=single_elastic_search_hit
-    )
-    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    @mock.patch('service.server.es_access.get_properties_for_postcode',
+                return_value=single_elastic_search_hit)
+    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
     def test_get_title_data_with_uprn_match(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         response_json = json.loads(response.data.decode())
@@ -120,11 +114,9 @@ class ViewTitleTestCase(unittest.TestCase):
         assert page_number == 1
         assert number_pages == 1
 
-    @mock.patch(
-        'service.server.get_properties_for_postcode',
-        return_value=twenty_one_elastic_search_hits
-    )
-    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    @mock.patch('service.server.es_access.get_properties_for_postcode',
+                return_value=twenty_one_elastic_search_hits)
+    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
     def test_postcode_search_with_21_matches(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         response_json = json.loads(response.data.decode())
@@ -138,11 +130,9 @@ class ViewTitleTestCase(unittest.TestCase):
         assert number_pages == 2
         assert number_results == 21
 
-    @mock.patch(
-        'service.server.get_properties_for_postcode',
-        return_value=twenty_one_elastic_search_hits
-    )
-    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    @mock.patch('service.server.es_access.get_properties_for_postcode',
+                return_value=twenty_one_elastic_search_hits)
+    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
     def test_postcode_search_with_21_matches_page_2(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB?page=2')
         response_json = json.loads(response.data.decode())
@@ -156,11 +146,9 @@ class ViewTitleTestCase(unittest.TestCase):
         assert number_pages == 2
         assert number_results == 21
 
-    @mock.patch(
-        'service.server.get_properties_for_postcode',
-        return_value=twenty_one_elastic_search_hits
-    )
-    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    @mock.patch('service.server.es_access.get_properties_for_postcode',
+                return_value=twenty_one_elastic_search_hits)
+    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
     def test_postcode_search_with_21_matches_page_50(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB?page=50')
         response_json = json.loads(response.data.decode())
@@ -175,10 +163,10 @@ class ViewTitleTestCase(unittest.TestCase):
         assert number_results == 21
 
     @mock.patch(
-        'service.server.get_properties_for_address',
+        'service.server.es_access.get_properties_for_address',
         return_value=twenty_one_elastic_search_hits
     )
-    @mock.patch('service.server.get_title_register', return_value=DN1000_title)
+    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
     def test_address_search_with_21_matches_page_2(self, mock_data, mock_title):
         response = self.app.get('/title_search_address/PL9_8TB?page=2')
         response_json = json.loads(response.data.decode())
@@ -198,8 +186,60 @@ class ViewTitleTestCase(unittest.TestCase):
         def fake_get_title_register(t):
             return FakeTitleRegisterData(t, {'title_number': t}, {}) if t % 2 else None
 
-        with mock.patch('service.server.get_title_register', fake_get_title_register):
+        with mock.patch('service.server.db_access.get_title_register', fake_get_title_register):
             recs = paginated_address_records(address_records, 3)
         assert recs['page_number'] == 3
         assert recs['number_pages'] == 5
         assert recs['number_results'] == 100
+
+    @mock.patch('service.server.db_access.get_title_register', return_value=None)
+    @mock.patch('service.server.es_access.get_info', return_value={'status': 200})
+    def test_health_returns_200_response_when_data_stores_respond_properly(
+            self, mock_get_info, mock_get_user):
+
+        response = self.app.get('/health')
+        assert response.status_code == 200
+        assert response.data.decode() == '{"status": "ok"}'
+
+    @mock.patch('service.server.db_access.get_title_register',
+                side_effect=Exception('Test PG exception'))
+    @mock.patch('service.server.es_access.get_info', return_value={'status': 200})
+    def test_health_returns_500_response_when_db_access_fails(self, mock_get_info, mock_get_user):
+        response = self.app.get('/health')
+
+        assert response.status_code == 500
+        json_response = json.loads(response.data.decode())
+        assert json_response == {
+            'status': 'error',
+            'errors': ['Problem talking to PostgreSQL: Test PG exception'],
+        }
+
+    @mock.patch('service.server.db_access.get_title_register', return_value=None)
+    @mock.patch('service.server.es_access.get_info', side_effect=Exception('Test ES exception'))
+    def test_health_returns_500_response_when_es_access_fails(self, mock_get_info, mock_get_user):
+        response = self.app.get('/health')
+
+        assert response.status_code == 500
+        json_response = json.loads(response.data.decode())
+        assert json_response == {
+            'status': 'error',
+            'errors': ['Problem talking to elasticsearch: Test ES exception'],
+        }
+
+    @mock.patch('service.server.db_access.get_title_register',
+                side_effect=Exception('Test PG exception'))
+    @mock.patch('service.server.es_access.get_info', side_effect=Exception('Test ES exception'))
+    def test_health_returns_500_response_with_multiple_errors_when_both_data_stores_fail(
+            self, mock_get_info, mock_get_user):
+
+        response = self.app.get('/health')
+
+        assert response.status_code == 500
+        json_response = json.loads(response.data.decode())
+        assert json_response == {
+            'status': 'error',
+            'errors': [
+                'Problem talking to elasticsearch: Test ES exception',
+                'Problem talking to PostgreSQL: Test PG exception',
+            ],
+        }
