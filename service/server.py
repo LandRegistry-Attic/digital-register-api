@@ -1,24 +1,15 @@
 #!/usr/bin/env python
 from service import app
-import os
-from flask import Flask, abort, jsonify, make_response, Response, request
-import requests
+from flask import jsonify, Response, request
 import json
 import logging
 import logging.config
-from sqlalchemy import Table, Column, String, create_engine
-from sqlalchemy.sql.expression import false
-import pg8000
-from service.models import TitleRegisterData
-from elasticsearch import Elasticsearch
-from elasticsearch_dsl import Search, Q
-from service.models import TitleRegisterData
 import math
 
-MAX_NUMBER_SEARCH_RESULTS = app.config['MAX_NUMBER_SEARCH_RESULTS']
+from service import db_access, es_access
+
 SEARCH_RESULTS_PER_PAGE = app.config['SEARCH_RESULTS_PER_PAGE']
 
-ELASTIC_SEARCH_ENDPOINT = app.config['ELASTIC_SEARCH_ENDPOINT']
 INTERNAL_SERVER_ERROR_RESPONSE_BODY = json.dumps(
     {'error': 'Internal server error'}
 )
@@ -30,16 +21,6 @@ TITLE_NOT_FOUND_RESPONSE = Response(
     status=404,
     mimetype=JSON_CONTENT_TYPE
 )
-
-
-def get_title_register(title_ref):
-    if title_ref:
-        # Will retrieve the first matching title that is not marked as deleted
-        result = TitleRegisterData.query.filter(TitleRegisterData.title_number == title_ref,
-                                                TitleRegisterData.is_deleted == false()).first()
-        return result
-    else:
-        raise TypeError('Title number must not be None.')
 
 
 @app.errorhandler(Exception)
@@ -55,36 +36,30 @@ def handleServerError(error):
     )
 
 
-@app.route('/', methods=['GET'])
+@app.route('/health', methods=['GET'])
 def healthcheck():
-    return "OK"
+    errors = _check_elasticsearch_connection() + _check_postgresql_connection()
+    status = 'error' if errors else 'ok'
+    http_status = 500 if errors else 200
 
+    response_body = {'status': status}
+    if errors:
+        response_body['errors'] = errors
 
-def get_properties_for_postcode(postcode):
-    search = create_search('property_by_postcode_3')
-    query = search.filter('term', postcode=postcode).sort(
-        {'street_name': {'missing': '_last'}},
-        {'house_no': {'missing': '_last'}},
-        {'house_alpha': {'missing': '_last'}},
-        {'street_name_2': {'missing': '_last'}},
-        {'secondary_house_no': {'missing': '_last'}},
-        {'secondary_house_alpha': {'missing': '_last'}},
-        {'sub_building_no': {'missing': '_last'}},
-        {'sub_building_description': {'missing': '_last'}},
-        {'first_number_in_address_string': {'missing': '_last'}},
-        {'address_string': {'missing': '_last'}}
+    return Response(
+        json.dumps(response_body),
+        status=http_status,
+        mimetype=JSON_CONTENT_TYPE,
     )
-    return query.execute().hits
 
 
-def get_properties_for_address(address):
-    search = create_search('property_by_address')
-    query = search.query('match', address_string=address)
-    return query.execute().hits
+def _hit_postgresql_with_sample_query():
+    # Hitting PostgreSQL database to see if it responds properly
+    db_access.get_title_register('non-existing-title')
 
 
 def paginated_address_records(address_records, page_number):
-    titles = [get_title_register(rec.title_number) for rec in address_records]
+    titles = [db_access.get_title_register(rec.title_number) for rec in address_records]
     title_dicts = [{'title_number': t.title_number, 'data': t.register_data} for t in titles if t]
 
     nof_results = len(title_dicts)
@@ -112,16 +87,9 @@ def paginated_and_index_address_records(address_records, page_number):
     return result
 
 
-def create_search(doc_type):
-    client = Elasticsearch([ELASTIC_SEARCH_ENDPOINT])
-    search = Search(using=client, index='landregistry', doc_type=doc_type)
-    search = search[0:MAX_NUMBER_SEARCH_RESULTS]
-    return search
-
-
 @app.route('/titles/<title_ref>', methods=['GET'])
 def get_title(title_ref):
-    data = get_title_register(title_ref)
+    data = db_access.get_title_register(title_ref)
     if data:
         result = {
             "data": data.register_data,
@@ -139,7 +107,7 @@ def get_properties(postcode):
     page_number = int(request.args.get('page', 1))
     no_underscores = postcode.replace("_", "")
     no_spaces = no_underscores.replace(" ", "")
-    address_records = get_properties_for_postcode(no_spaces)
+    address_records = es_access.get_properties_for_postcode(no_spaces)
     result = paginated_and_index_address_records(address_records, page_number)
     return jsonify(result)
 
@@ -147,6 +115,28 @@ def get_properties(postcode):
 @app.route('/title_search_address/<address>', methods=['GET'])
 def get_titles_for_address(address):
     page_number = int(request.args.get('page', 1))
-    address_records = get_properties_for_address(address)
+    address_records = es_access.get_properties_for_address(address)
     result = paginated_and_index_address_records(address_records, page_number)
     return jsonify(result)
+
+
+def _check_postgresql_connection():
+    """Checks PostgreSQL connection and returns a list of errors"""
+    try:
+        _hit_postgresql_with_sample_query()
+        return []
+    except Exception as e:
+        error_message = 'Problem talking to PostgreSQL: {0}'.format(str(e))
+        return [error_message]
+
+
+def _check_elasticsearch_connection():
+    """Checks elasticsearch connection and returns a list of errors"""
+    try:
+        status = es_access.get_info()['status']
+        if status == 200:
+            return []
+        else:
+            return ['Unexpected elasticsearch status: {}'.format(status)]
+    except Exception as e:
+        return ['Problem talking to elasticsearch: {0}'.format(str(e))]
