@@ -18,7 +18,7 @@ def get_properties_for_postcode(postcode):
 
 def get_properties_for_address(address):
     search = create_search('property_by_address')
-    query = search.query('match', address_string=address)
+    query = search.query('match', address_string=address.lower())
     return query.execute().hits
 
 
