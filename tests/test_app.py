@@ -6,10 +6,10 @@ from service import app
 from service.server import paginated_address_records
 
 
-register_fields = ['title_number', 'register_data', 'geometry_data']
+register_fields = ['title_number', 'register_data', 'geometry_data', 'official_copy_data']
 FakeTitleRegisterData = namedtuple('TitleRegisterData', register_fields)
-DN1000_title = FakeTitleRegisterData('DN1000', "data", "geometry")
-DN1001_title = FakeTitleRegisterData('DN1001', "data", "geometry")
+DN1000_title = FakeTitleRegisterData('DN1000', "data", "geometry", {"official": "copy"})
+DN1001_title = FakeTitleRegisterData('DN1001', "data", "geometry", {"official": "copy"})
 two_titles = [DN1000_title, DN1001_title]
 
 FakeElasticSearchHit = namedtuple('Hit', [
@@ -181,10 +181,12 @@ class ViewTitleTestCase(unittest.TestCase):
         assert number_results == 21
 
     def test_pagination_with_deleted_records(self):
-        address_records = [FakeTitleRegisterData(i, {'title_number': i}, {}) for i in range(200)]
+        address_records = [
+            FakeTitleRegisterData(i, {'title_number': i}, {}, {}) for i in range(200)
+        ]
 
         def fake_get_title_register(t):
-            return FakeTitleRegisterData(t, {'title_number': t}, {}) if t % 2 else None
+            return FakeTitleRegisterData(t, {'title_number': t}, {}, {}) if t % 2 else None
 
         with mock.patch('service.server.db_access.get_title_register', fake_get_title_register):
             recs = paginated_address_records(address_records, 3)
@@ -243,3 +245,33 @@ class ViewTitleTestCase(unittest.TestCase):
                 'Problem talking to PostgreSQL: Test PG exception',
             ],
         }
+
+    @mock.patch('service.server.db_access.get_official_copy_data', return_value=DN1000_title)
+    def test_get_official_copy_calls_db_access_for_data(self, mock_get_official_copy_data):
+        title_number = 'DN1000'
+        self.app.get('titles/{}/official-copy'.format(title_number))
+        mock_get_official_copy_data.assert_called_once_with(title_number)
+
+    @mock.patch('service.server.db_access.get_official_copy_data', return_value=None)
+    def test_get_official_copy_returns_not_found_response_when_title_no_present(
+            self, mock_get_official_copy_data):
+
+        response = self.app.get('titles/non-existing-title-number/official-copy')
+        assert response.status_code == 404
+        assert response.data.decode() == '{"error": "Title not found"}'
+
+    @mock.patch('service.server.db_access.get_official_copy_data', return_value=DN1000_title)
+    def test_get_official_copy_returns_official_copy_data_when_present(
+            self, mock_get_official_copy_data):
+
+        response = self.app.get('titles/title-number/official-copy')
+
+        assert response.status_code == 200
+        response_json = json.loads(response.data.decode())
+
+        expected_json = {
+            'official_copy_data': DN1000_title.official_copy_data,
+            'title_number': DN1000_title.title_number,
+        }
+
+        assert response_json == expected_json
