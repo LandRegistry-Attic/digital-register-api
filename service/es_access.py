@@ -10,15 +10,7 @@ MAX_NUMBER_SEARCH_RESULTS = app.config['MAX_NUMBER_SEARCH_RESULTS']
 def get_properties_for_postcode(postcode):
     search = create_search('property_by_postcode_3')
     query = search.filter('term', postcode=postcode).sort(
-        {'street_name': {'missing': '_last'}},
-        {'house_no': {'missing': '_last'}},
-        {'house_alpha': {'missing': '_last'}},
-        {'street_name_2': {'missing': '_last'}},
-        {'secondary_house_no': {'missing': '_last'}},
-        {'secondary_house_alpha': {'missing': '_last'}},
-        {'sub_building_no': {'missing': '_last'}},
-        {'sub_building_description': {'missing': '_last'}},
-        {'first_number_in_address_string': {'missing': '_last'}},
+        {'house_number_or_first_number': {'missing': '_last'}},
         {'address_string': {'missing': '_last'}}
     )
     return query.execute().hits
@@ -26,7 +18,7 @@ def get_properties_for_postcode(postcode):
 
 def get_properties_for_address(address):
     search = create_search('property_by_address')
-    query = search.query('match', address_string=address)
+    query = search.query('match', address_string=address.lower())
     return query.execute().hits
 
 
