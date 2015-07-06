@@ -8,8 +8,14 @@ from service.server import paginated_address_records
 
 register_fields = ['title_number', 'register_data', 'geometry_data', 'official_copy_data']
 FakeTitleRegisterData = namedtuple('TitleRegisterData', register_fields)
-DN1000_title = FakeTitleRegisterData('DN1000', "data", "geometry", {"official": "copy"})
-DN1001_title = FakeTitleRegisterData('DN1001', "data", "geometry", {"official": "copy"})
+DN1000_title = FakeTitleRegisterData(
+    'DN1000', 'data', 'geometry', {'sub_registers': [{'A': 'register A'}]}
+)
+
+DN1001_title = FakeTitleRegisterData(
+    'DN1001', 'data', 'geometry', {'sub_registers': [{'A': 'register A'}]}
+)
+
 two_titles = [DN1000_title, DN1001_title]
 
 FakeElasticSearchHit = namedtuple('Hit', [
@@ -270,8 +276,10 @@ class ViewTitleTestCase(unittest.TestCase):
         response_json = json.loads(response.data.decode())
 
         expected_json = {
-            'official_copy_data': DN1000_title.official_copy_data,
-            'title_number': DN1000_title.title_number,
+            'official_copy_data': {
+                'sub_registers': DN1000_title.official_copy_data['sub_registers'],
+                'title_number': DN1000_title.title_number,
+            }
         }
 
         assert response_json == expected_json
