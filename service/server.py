@@ -98,7 +98,6 @@ def get_title(title_ref):
         }
         return jsonify(result)
     else:
-        # Title not found
         return TITLE_NOT_FOUND_RESPONSE
 
 
@@ -107,8 +106,10 @@ def get_official_copy(title_ref):
     data = db_access.get_official_copy_data(title_ref)
     if data:
         result = {
-            'official_copy_data': data.official_copy_data,
-            'title_number': data.title_number,
+            'official_copy_data': {
+                'sub_registers': data.official_copy_data['sub_registers'],
+                'title_number': data.title_number,
+            }
         }
         return jsonify(result)
     else:
