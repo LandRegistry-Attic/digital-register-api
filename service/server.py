@@ -8,6 +8,7 @@ import math
 
 from service import db_access, es_access
 
+MAX_NUMBER_SEARCH_RESULTS = app.config['MAX_NUMBER_SEARCH_RESULTS']
 SEARCH_RESULTS_PER_PAGE = app.config['SEARCH_RESULTS_PER_PAGE']
 
 INTERNAL_SERVER_ERROR_RESPONSE_BODY = json.dumps(
@@ -59,32 +60,17 @@ def _hit_postgresql_with_sample_query():
 
 
 def paginated_address_records(address_records, page_number):
-    titles = [db_access.get_title_register(rec.title_number) for rec in address_records]
-    title_dicts = [{'title_number': t.title_number, 'data': t.register_data} for t in titles if t]
-
-    nof_results = len(title_dicts)
-    number_pages = math.ceil(nof_results / SEARCH_RESULTS_PER_PAGE)
-    page_number = min(page_number, number_pages)
-
-    start_index = (page_number - 1) * SEARCH_RESULTS_PER_PAGE
-    end_index = page_number * SEARCH_RESULTS_PER_PAGE
-
-    title_dicts_on_page = title_dicts[start_index:end_index]
-
-    return {
-        'titles': title_dicts_on_page,
-        'number_pages': number_pages,
-        'page_number': page_number,
-        'number_results': nof_results,
-    }
-
-
-def paginated_and_index_address_records(address_records, page_number):
     if address_records:
-        result = paginated_address_records(address_records, page_number)
+        titles = [db_access.get_title_register(rec.title_number) for rec in address_records]
+        dicts = [{'title_number': t.title_number, 'data': t.register_data} for t in titles if t]
+
+        nof_results = min(address_records.total, MAX_NUMBER_SEARCH_RESULTS)
+        nof_pages = math.ceil(nof_results / SEARCH_RESULTS_PER_PAGE)
+        page_number = min(page_number, nof_pages)
     else:
-        result = {'titles': [], 'number_pages': 0, 'page_number': 0, 'number_results': 0}
-    return result
+        dicts, nof_pages, page_num, nof_results = [], 0, 0, 0
+    return {'titles': dicts, 'number_pages': nof_pages, 'page_number': page_number,
+            'number_results': nof_results}
 
 
 @app.route('/titles/<title_ref>', methods=['GET'])
@@ -119,18 +105,17 @@ def get_official_copy(title_ref):
 @app.route('/title_search_postcode/<postcode>', methods=['GET'])
 def get_properties(postcode):
     page_number = int(request.args.get('page', 1))
-    no_underscores = postcode.replace("_", "")
-    no_spaces = no_underscores.replace(" ", "")
-    address_records = es_access.get_properties_for_postcode(no_spaces)
-    result = paginated_and_index_address_records(address_records, page_number)
+    normalised_postcode = postcode.replace('_', '').replace(' ', '')
+    address_records = es_access.get_properties_for_postcode(normalised_postcode, page_number)
+    result = paginated_address_records(address_records, page_number)
     return jsonify(result)
 
 
 @app.route('/title_search_address/<address>', methods=['GET'])
 def get_titles_for_address(address):
     page_number = int(request.args.get('page', 1))
-    address_records = es_access.get_properties_for_address(address)
-    result = paginated_and_index_address_records(address_records, page_number)
+    address_records = es_access.get_properties_for_address(address, page_number)
+    result = paginated_address_records(address_records, page_number)
     return jsonify(result)
 
 
