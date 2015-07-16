@@ -61,8 +61,10 @@ def _hit_postgresql_with_sample_query():
 
 def paginated_address_records(address_records, page_number):
     if address_records:
-        titles = [db_access.get_title_register(rec.title_number) for rec in address_records]
-        dicts = [{'title_number': t.title_number, 'data': t.register_data} for t in titles if t]
+        title_numbers = [rec.title_number for rec in address_records]
+        titles = db_access.get_title_registers(title_numbers)
+        ordered = sorted(titles, key=lambda t: title_numbers.index(t.title_number))
+        dicts = [{'title_number': t.title_number, 'data': t.register_data} for t in ordered if t]
 
         nof_results = min(address_records.total, MAX_NUMBER_SEARCH_RESULTS)
         nof_pages = math.ceil(nof_results / SEARCH_RESULTS_PER_PAGE)
