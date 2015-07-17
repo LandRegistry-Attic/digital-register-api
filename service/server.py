@@ -66,11 +66,15 @@ def paginated_address_records(address_records, page_number):
         ordered = sorted(titles, key=lambda t: title_numbers.index(t.title_number))
         dicts = [{'title_number': t.title_number, 'data': t.register_data} for t in ordered if t]
 
+        # NOTE: our code uses the number of records reported by elasticsearch. It is theoretically
+        # possible that records have been deleted but elasticsearch-updater has not yet updated
+        # itself, but for performance reasons we no longer check this.
+        # Records that have been deleted are not included in the search results list.
         nof_results = min(address_records.total, MAX_NUMBER_SEARCH_RESULTS)
-        nof_pages = math.ceil(nof_results / SEARCH_RESULTS_PER_PAGE)
-        page_number = min(page_number, nof_pages)
+        nof_pages = math.ceil(nof_results / SEARCH_RESULTS_PER_PAGE)  # 0 if no results
+        page_number = min(page_number, nof_pages)  # 1 indexed
     else:
-        dicts, nof_pages, page_num, nof_results = [], 0, 0, 0
+        dicts, nof_pages, page_number, nof_results = [], 0, 1, 0
     return {'titles': dicts, 'number_pages': nof_pages, 'page_number': page_number,
             'number_results': nof_results}
 
