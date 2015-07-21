@@ -24,6 +24,17 @@ def get_title_register(title_number):
         raise TypeError('Title number must not be None.')
 
 
+# TODO: write integration tests
+def get_title_registers(title_numbers):
+    # Will retrieve matching titles that are not marked as deleted
+    fields = [TitleRegisterData.title_number.name, TitleRegisterData.register_data.name,
+              TitleRegisterData.geometry_data.name]
+    query = TitleRegisterData.query.options(Load(TitleRegisterData).load_only(*fields))
+    results = query.filter(TitleRegisterData.title_number.in_(title_numbers),
+                           TitleRegisterData.is_deleted == false()).all()
+    return results
+
+
 def get_official_copy_data(title_number):
     result = TitleRegisterData.query.options(
         Load(TitleRegisterData).load_only(

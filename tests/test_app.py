@@ -1,7 +1,9 @@
 from collections import namedtuple
-import unittest
+from elasticsearch_dsl.utils import AttrList
 import json
 import mock
+import unittest
+
 from service import app
 from service.server import paginated_address_records
 
@@ -24,9 +26,10 @@ FakeElasticSearchHit = namedtuple('Hit', [
     'doubleDependentLocality', 'postCode', 'postTown',
     'subBuildingName', 'thoroughfareName', 'uprns', 'title_number'])
 
-no_elastic_search_hits = []
+no_es_hits_list = AttrList([])
+no_es_hits_list.total = 0
 
-single_elastic_search_hit = [
+single_es_hit = [
     FakeElasticSearchHit(
         'address key_', 'building name_', '34',
         'business name_', 'department name_', 'dependent locality_',
@@ -36,7 +39,11 @@ single_elastic_search_hit = [
     ),
 ]
 
-twenty_one_elastic_search_hits = 21*single_elastic_search_hit
+single_es_hit_list = AttrList(single_es_hit)
+single_es_hit_list.total = 1
+
+twenty_one_es_hits_list = AttrList(21 * single_es_hit)
+twenty_one_es_hits_list.total = 21
 
 
 class ViewTitleTestCase(unittest.TestCase):
@@ -75,7 +82,7 @@ class ViewTitleTestCase(unittest.TestCase):
 
     # 200 with empty result when the database query does not return anything
     @mock.patch('service.server.es_access.get_properties_for_postcode',
-                return_value=no_elastic_search_hits)
+                return_value=no_es_hits_list)
     def test_get_invalid_property_path_empty_result(self, mock_data):
         response = self.app.get('/title_search_postcode/invalid-postcode')
         assert response.status_code == 200
@@ -88,15 +95,15 @@ class ViewTitleTestCase(unittest.TestCase):
         assert number_pages == 0
 
     @mock.patch('service.server.es_access.get_properties_for_postcode',
-                return_value=single_elastic_search_hit)
-    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
+                return_value=single_es_hit_list)
+    @mock.patch('service.server.db_access.get_title_registers', return_value=[DN1000_title])
     def test_get_valid_property_path(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         assert response.status_code == 200
 
     @mock.patch('service.server.es_access.get_properties_for_postcode',
-                return_value=single_elastic_search_hit)
-    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
+                return_value=single_es_hit_list)
+    @mock.patch('service.server.db_access.get_title_registers', return_value=[DN1000_title])
     def test_get_single_uprn_title_match(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         response_json = json.loads(response.data.decode())
@@ -104,12 +111,12 @@ class ViewTitleTestCase(unittest.TestCase):
         page_number = response_json['page_number']
         number_pages = response_json['number_pages']
         assert titles[0]['title_number'] == 'DN1000'
-        assert page_number == 1
+        assert page_number == 0
         assert number_pages == 1
 
     @mock.patch('service.server.es_access.get_properties_for_postcode',
-                return_value=single_elastic_search_hit)
-    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
+                return_value=single_es_hit_list)
+    @mock.patch('service.server.db_access.get_title_registers', return_value=[DN1000_title])
     def test_get_title_data_with_uprn_match(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         response_json = json.loads(response.data.decode())
@@ -117,12 +124,12 @@ class ViewTitleTestCase(unittest.TestCase):
         page_number = response_json['page_number']
         number_pages = response_json['number_pages']
         assert titles[0]['data'] == 'data'
-        assert page_number == 1
+        assert page_number == 0
         assert number_pages == 1
 
     @mock.patch('service.server.es_access.get_properties_for_postcode',
-                return_value=twenty_one_elastic_search_hits)
-    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
+                return_value=twenty_one_es_hits_list)
+    @mock.patch('service.server.db_access.get_title_registers', return_value=[DN1000_title])
     def test_postcode_search_with_21_matches(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB')
         response_json = json.loads(response.data.decode())
@@ -131,15 +138,15 @@ class ViewTitleTestCase(unittest.TestCase):
         number_pages = response_json['number_pages']
         number_results = response_json['number_results']
         assert titles[0]['data'] == 'data'
-        assert len(titles) == 20
-        assert page_number == 1
+        assert len(titles) == 1
+        assert page_number == 0
         assert number_pages == 2
         assert number_results == 21
 
     @mock.patch('service.server.es_access.get_properties_for_postcode',
-                return_value=twenty_one_elastic_search_hits)
-    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
-    def test_postcode_search_with_21_matches_page_2(self, mock_data, mock_title):
+                return_value=twenty_one_es_hits_list)
+    @mock.patch('service.server.db_access.get_title_registers', return_value=[DN1000_title])
+    def test_postcode_search_with_21_matches_second_page(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB?page=2')
         response_json = json.loads(response.data.decode())
         titles = response_json['titles']
@@ -148,14 +155,14 @@ class ViewTitleTestCase(unittest.TestCase):
         number_results = response_json['number_results']
         assert titles[0]['data'] == 'data'
         assert len(titles) == 1
-        assert page_number == 2
+        assert page_number == 1
         assert number_pages == 2
         assert number_results == 21
 
     @mock.patch('service.server.es_access.get_properties_for_postcode',
-                return_value=twenty_one_elastic_search_hits)
-    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
-    def test_postcode_search_with_21_matches_page_50(self, mock_data, mock_title):
+                return_value=twenty_one_es_hits_list)
+    @mock.patch('service.server.db_access.get_title_registers', return_value=[DN1000_title])
+    def test_postcode_search_with_21_matches_50th_page(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB?page=50')
         response_json = json.loads(response.data.decode())
         titles = response_json['titles']
@@ -164,16 +171,14 @@ class ViewTitleTestCase(unittest.TestCase):
         number_results = response_json['number_results']
         assert titles[0]['data'] == 'data'
         assert len(titles) == 1
-        assert page_number == 2
+        assert page_number == 1
         assert number_pages == 2
         assert number_results == 21
 
-    @mock.patch(
-        'service.server.es_access.get_properties_for_address',
-        return_value=twenty_one_elastic_search_hits
-    )
-    @mock.patch('service.server.db_access.get_title_register', return_value=DN1000_title)
-    def test_address_search_with_21_matches_page_2(self, mock_data, mock_title):
+    @mock.patch('service.server.es_access.get_properties_for_address',
+                return_value=twenty_one_es_hits_list)
+    @mock.patch('service.server.db_access.get_title_registers', return_value=[DN1000_title])
+    def test_address_search_with_21_matches_second_page(self, mock_data, mock_title):
         response = self.app.get('/title_search_address/PL9_8TB?page=2')
         response_json = json.loads(response.data.decode())
         titles = response_json['titles']
@@ -182,23 +187,28 @@ class ViewTitleTestCase(unittest.TestCase):
         number_results = response_json['number_results']
         assert titles[0]['data'] == 'data'
         assert len(titles) == 1
-        assert page_number == 2
+        assert page_number == 1
         assert number_pages == 2
         assert number_results == 21
 
     def test_pagination_with_deleted_records(self):
-        address_records = [
-            FakeTitleRegisterData(i, {'title_number': i}, {}, {}) for i in range(200)
-        ]
+        address_records = AttrList([
+            FakeTitleRegisterData(i, {'title_number': i}, {}, {}) for i in range(48)
+        ])
+        address_records.total = 48
 
-        def fake_get_title_register(t):
-            return FakeTitleRegisterData(t, {'title_number': t}, {}, {}) if t % 2 else None
+        def fake_get_title_registers(ts):
+            return [FakeTitleRegisterData(t, {'title_number': t}, {}, {}) for t in ts if t % 2]
 
-        with mock.patch('service.server.db_access.get_title_register', fake_get_title_register):
-            recs = paginated_address_records(address_records, 3)
-        assert recs['page_number'] == 3
-        assert recs['number_pages'] == 5
-        assert recs['number_results'] == 100
+        with mock.patch('service.server.db_access.get_title_registers', fake_get_title_registers):
+            recs = paginated_address_records(address_records, 2)
+        assert recs['page_number'] == 1
+        assert recs['number_pages'] == 3
+        # NOTE: our code uses the number of records reported by elasticsearch. It is theoretically
+        # possible that records have been deleted but elasticsearch-updater has not yet updated
+        # itself, but for performance reasons we no longer check this.
+        # Records that have been deleted are not included in the search results list.
+        assert recs['number_results'] == 48  # not 24 - see explanation above
 
     @mock.patch('service.server.db_access.get_title_register', return_value=None)
     @mock.patch('service.server.es_access.get_info', return_value={'status': 200})
