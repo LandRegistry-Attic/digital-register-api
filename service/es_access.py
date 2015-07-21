@@ -8,8 +8,8 @@ SEARCH_RESULTS_PER_PAGE = app.config['SEARCH_RESULTS_PER_PAGE']
 
 
 def _get_start_and_end_indexes(page_number):
-    start_index = (page_number - 1) * SEARCH_RESULTS_PER_PAGE
-    end_index = page_number * SEARCH_RESULTS_PER_PAGE
+    start_index = page_number * SEARCH_RESULTS_PER_PAGE
+    end_index = start_index + SEARCH_RESULTS_PER_PAGE
     return start_index, end_index
 
 

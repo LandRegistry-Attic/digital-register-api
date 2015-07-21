@@ -91,7 +91,7 @@ class ViewTitleTestCase(unittest.TestCase):
         page_number = response_json['page_number']
         number_pages = response_json['number_pages']
         assert titles == []
-        assert page_number == 1
+        assert page_number == 0
         assert number_pages == 0
 
     @mock.patch('service.server.es_access.get_properties_for_postcode',
@@ -111,7 +111,7 @@ class ViewTitleTestCase(unittest.TestCase):
         page_number = response_json['page_number']
         number_pages = response_json['number_pages']
         assert titles[0]['title_number'] == 'DN1000'
-        assert page_number == 1
+        assert page_number == 0
         assert number_pages == 1
 
     @mock.patch('service.server.es_access.get_properties_for_postcode',
@@ -124,7 +124,7 @@ class ViewTitleTestCase(unittest.TestCase):
         page_number = response_json['page_number']
         number_pages = response_json['number_pages']
         assert titles[0]['data'] == 'data'
-        assert page_number == 1
+        assert page_number == 0
         assert number_pages == 1
 
     @mock.patch('service.server.es_access.get_properties_for_postcode',
@@ -139,14 +139,14 @@ class ViewTitleTestCase(unittest.TestCase):
         number_results = response_json['number_results']
         assert titles[0]['data'] == 'data'
         assert len(titles) == 1
-        assert page_number == 1
+        assert page_number == 0
         assert number_pages == 2
         assert number_results == 21
 
     @mock.patch('service.server.es_access.get_properties_for_postcode',
                 return_value=twenty_one_es_hits_list)
     @mock.patch('service.server.db_access.get_title_registers', return_value=[DN1000_title])
-    def test_postcode_search_with_21_matches_page_2(self, mock_data, mock_title):
+    def test_postcode_search_with_21_matches_second_page(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB?page=2')
         response_json = json.loads(response.data.decode())
         titles = response_json['titles']
@@ -155,14 +155,14 @@ class ViewTitleTestCase(unittest.TestCase):
         number_results = response_json['number_results']
         assert titles[0]['data'] == 'data'
         assert len(titles) == 1
-        assert page_number == 2
+        assert page_number == 1
         assert number_pages == 2
         assert number_results == 21
 
     @mock.patch('service.server.es_access.get_properties_for_postcode',
                 return_value=twenty_one_es_hits_list)
     @mock.patch('service.server.db_access.get_title_registers', return_value=[DN1000_title])
-    def test_postcode_search_with_21_matches_page_50(self, mock_data, mock_title):
+    def test_postcode_search_with_21_matches_50th_page(self, mock_data, mock_title):
         response = self.app.get('/title_search_postcode/PL9_8TB?page=50')
         response_json = json.loads(response.data.decode())
         titles = response_json['titles']
@@ -171,14 +171,14 @@ class ViewTitleTestCase(unittest.TestCase):
         number_results = response_json['number_results']
         assert titles[0]['data'] == 'data'
         assert len(titles) == 1
-        assert page_number == 2
+        assert page_number == 1
         assert number_pages == 2
         assert number_results == 21
 
     @mock.patch('service.server.es_access.get_properties_for_address',
                 return_value=twenty_one_es_hits_list)
     @mock.patch('service.server.db_access.get_title_registers', return_value=[DN1000_title])
-    def test_address_search_with_21_matches_page_2(self, mock_data, mock_title):
+    def test_address_search_with_21_matches_second_page(self, mock_data, mock_title):
         response = self.app.get('/title_search_address/PL9_8TB?page=2')
         response_json = json.loads(response.data.decode())
         titles = response_json['titles']
@@ -187,7 +187,7 @@ class ViewTitleTestCase(unittest.TestCase):
         number_results = response_json['number_results']
         assert titles[0]['data'] == 'data'
         assert len(titles) == 1
-        assert page_number == 2
+        assert page_number == 1
         assert number_pages == 2
         assert number_results == 21
 
@@ -202,7 +202,7 @@ class ViewTitleTestCase(unittest.TestCase):
 
         with mock.patch('service.server.db_access.get_title_registers', fake_get_title_registers):
             recs = paginated_address_records(address_records, 2)
-        assert recs['page_number'] == 2
+        assert recs['page_number'] == 1
         assert recs['number_pages'] == 3
         # NOTE: our code uses the number of records reported by elasticsearch. It is theoretically
         # possible that records have been deleted but elasticsearch-updater has not yet updated

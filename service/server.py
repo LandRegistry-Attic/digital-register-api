@@ -72,9 +72,9 @@ def paginated_address_records(address_records, page_number):
         # Records that have been deleted are not included in the search results list.
         nof_results = min(address_records.total, MAX_NUMBER_SEARCH_RESULTS)
         nof_pages = math.ceil(nof_results / SEARCH_RESULTS_PER_PAGE)  # 0 if no results
-        page_number = min(page_number, nof_pages)  # 1 indexed
+        page_number = min(page_number, nof_pages - 1) if nof_pages > 0 else 0  # 0 indexed
     else:
-        title_dicts, nof_pages, page_number, nof_results = [], 0, 1, 0
+        title_dicts, nof_pages, page_number, nof_results = [], 0, 0, 0
     return {'titles': title_dicts, 'number_pages': nof_pages, 'page_number': page_number,
             'number_results': nof_results}
 
@@ -110,7 +110,7 @@ def get_official_copy(title_ref):
 
 @app.route('/title_search_postcode/<postcode>', methods=['GET'])
 def get_properties(postcode):
-    page_number = int(request.args.get('page', 1))
+    page_number = int(request.args.get('page', 0))
     normalised_postcode = postcode.replace('_', '').replace(' ', '')
     address_records = es_access.get_properties_for_postcode(normalised_postcode, page_number)
     result = paginated_address_records(address_records, page_number)
@@ -119,7 +119,7 @@ def get_properties(postcode):
 
 @app.route('/title_search_address/<address>', methods=['GET'])
 def get_titles_for_address(address):
-    page_number = int(request.args.get('page', 1))
+    page_number = int(request.args.get('page', 0))
     address_records = es_access.get_properties_for_address(address, page_number)
     result = paginated_address_records(address_records, page_number)
     return jsonify(result)
