@@ -202,7 +202,7 @@ class ViewTitleTestCase(unittest.TestCase):
 
         with mock.patch('service.server.db_access.get_title_registers', fake_get_title_registers):
             recs = paginated_address_records(address_records, 2)
-        assert recs['page_number'] == 1
+        assert recs['page_number'] == 2
         assert recs['number_pages'] == 3
         # NOTE: our code uses the number of records reported by elasticsearch. It is theoretically
         # possible that records have been deleted but elasticsearch-updater has not yet updated
