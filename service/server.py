@@ -1,12 +1,10 @@
-#!/usr/bin/env python
-from service import app
-from flask import jsonify, Response, request
+from flask import jsonify, Response, request  # type: ignore
 import json
 import logging
-import logging.config
+import logging.config                         # type: ignore
 import math
 
-from service import db_access, es_access
+from service import app, db_access, es_access
 
 MAX_NUMBER_SEARCH_RESULTS = app.config['MAX_NUMBER_SEARCH_RESULTS']
 SEARCH_RESULTS_PER_PAGE = app.config['SEARCH_RESULTS_PER_PAGE']

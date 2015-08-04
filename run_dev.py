@@ -1,4 +1,3 @@
-# !/usr/bin/env python
 import logging
 import atexit
 import os
@@ -11,8 +10,8 @@ LOGGER = logging.getLogger(__name__)
 
 @atexit.register
 def handle_shutdown(*args, **kwargs):
-    LOGGER.info("Stopped the server")
+    LOGGER.info('Stopped the server')
 
 
-LOGGER.info("Starting the server")
-app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+LOGGER.info('Starting the server')
+app.run(host="0.0.0.0", port=int(os.environ.get('PORT', '5000')))
