@@ -1,4 +1,5 @@
 import os
+from typing import Dict, Union
 
 user = os.environ['POSTGRES_USER']
 password = os.environ['POSTGRES_PASSWORD']
@@ -21,7 +22,7 @@ CONFIG_DICT = {
     'ELASTIC_SEARCH_ENDPOINT': os.environ['ELASTIC_SEARCH_ENDPOINT'],
     'MAX_NUMBER_SEARCH_RESULTS': max_number,
     'SEARCH_RESULTS_PER_PAGE': search_results,
-}
+}  # type: Dict[str, Union[bool, str, int]]
 
 settings = os.environ.get('SETTINGS')
 
