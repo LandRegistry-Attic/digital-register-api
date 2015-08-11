@@ -1,9 +1,9 @@
-import faulthandler
-from flask import Flask
-from flask.ext.sqlalchemy import SQLAlchemy
-from service import logging_config
+import faulthandler                          # type: ignore
+from flask import Flask                      # type: ignore
+from flask.ext.sqlalchemy import SQLAlchemy  # type: ignore
 
 from config import CONFIG_DICT
+from service import logging_config
 
 # This causes the traceback to be written to the fault log file in case of serious faults
 fault_log_file = open(CONFIG_DICT['FAULT_LOG_FILE_PATH'], 'a')

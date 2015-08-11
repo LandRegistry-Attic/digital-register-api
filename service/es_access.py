@@ -1,5 +1,6 @@
-from elasticsearch import Elasticsearch
-from elasticsearch_dsl import Search
+from elasticsearch import Elasticsearch  # type: ignore
+from elasticsearch_dsl import Search     # type: ignore
+
 from service import app
 
 ELASTICSEARCH_ENDPOINT = app.config['ELASTIC_SEARCH_ENDPOINT']

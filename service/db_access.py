@@ -1,5 +1,6 @@
-from sqlalchemy import false
-from sqlalchemy.orm.strategy_options import load_only, Load
+from sqlalchemy import false                                 # type: ignore
+from sqlalchemy.orm.strategy_options import load_only, Load  # type: ignore
+
 from service.models import TitleRegisterData
 
 
