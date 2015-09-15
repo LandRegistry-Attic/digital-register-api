@@ -4,7 +4,6 @@ from sqlalchemy.orm.strategy_options import load_only, Load  # type: ignore
 from service.models import TitleRegisterData
 
 
-# TODO: write integration tests
 def get_title_register(title_number):
     # TODO: trust our own code to do the right thing - validate data on input instead
     if title_number:
@@ -25,7 +24,6 @@ def get_title_register(title_number):
         raise TypeError('Title number must not be None.')
 
 
-# TODO: write integration tests
 def get_title_registers(title_numbers):
     # Will retrieve matching titles that are not marked as deleted
     fields = [TitleRegisterData.title_number.name, TitleRegisterData.register_data.name,
