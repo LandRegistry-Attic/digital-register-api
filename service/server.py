@@ -6,9 +6,6 @@ import math
 
 from service import app, db_access, es_access
 
-MAX_NUMBER_SEARCH_RESULTS = app.config['MAX_NUMBER_SEARCH_RESULTS']
-SEARCH_RESULTS_PER_PAGE = app.config['SEARCH_RESULTS_PER_PAGE']
-
 INTERNAL_SERVER_ERROR_RESPONSE_BODY = json.dumps(
     {'error': 'Internal server error'}
 )
@@ -38,7 +35,7 @@ def handleServerError(error):
 # TODO: remove the root route when the monitoring tools can work without it
 @app.route('/', methods=['GET'])
 @app.route('/health', methods=['GET'])
-def healthcheck():
+def health_check():
     errors = _check_elasticsearch_connection() + _check_postgresql_connection()
     status = 'error' if errors else 'ok'
     http_status = 500 if errors else 200
@@ -52,31 +49,6 @@ def healthcheck():
         status=http_status,
         mimetype=JSON_CONTENT_TYPE,
     )
-
-
-def _hit_postgresql_with_sample_query():
-    # Hitting PostgreSQL database to see if it responds properly
-    db_access.get_title_register('non-existing-title')
-
-
-def paginated_address_records(address_records, page_number):
-    if address_records:
-        title_numbers = [rec.title_number for rec in address_records]
-        titles = db_access.get_title_registers(title_numbers)
-        ordered = sorted(titles, key=lambda t: title_numbers.index(t.title_number))
-        title_dicts = [{'title_number': t.title_number, 'data': t.register_data} for t in ordered]
-
-        # NOTE: our code uses the number of records reported by elasticsearch. It is theoretically
-        # possible that records have been deleted but elasticsearch-updater has not yet updated
-        # itself, but for performance reasons we no longer check this.
-        # Records that have been deleted are not included in the search results list.
-        nof_results = min(address_records.total, MAX_NUMBER_SEARCH_RESULTS)
-        nof_pages = math.ceil(nof_results / SEARCH_RESULTS_PER_PAGE)  # 0 if no results
-        page_number = min(page_number, nof_pages - 1) if nof_pages > 0 else 0  # 0 indexed
-    else:
-        title_dicts, nof_pages, page_number, nof_results = [], 0, 0, 0
-    return {'titles': title_dicts, 'number_pages': nof_pages, 'page_number': page_number,
-            'number_results': nof_results}
 
 
 @app.route('/titles/<title_ref>', methods=['GET'])
@@ -109,20 +81,45 @@ def get_official_copy(title_ref):
 
 
 @app.route('/title_search_postcode/<postcode>', methods=['GET'])
-def get_properties(postcode):
+def get_properties_for_postcode(postcode):
     page_number = int(request.args.get('page', 0))
-    normalised_postcode = postcode.replace('_', '').replace(' ', '')
-    address_records = es_access.get_properties_for_postcode(normalised_postcode, page_number)
-    result = paginated_address_records(address_records, page_number)
+    normalised_postcode = postcode.replace('_', '').replace(' ', '').upper()
+    address_records = es_access.get_properties_for_postcode(normalised_postcode, _get_page_size(), page_number)
+    result = _paginated_address_records(address_records, page_number)
     return jsonify(result)
 
 
 @app.route('/title_search_address/<address>', methods=['GET'])
 def get_titles_for_address(address):
     page_number = int(request.args.get('page', 0))
-    address_records = es_access.get_properties_for_address(address, page_number)
-    result = paginated_address_records(address_records, page_number)
+
+    # TODO: keep pagination aspect resolving in this module and pass page size to es_access
+    address_records = es_access.get_properties_for_address(address, _get_page_size(), page_number)
+    result = _paginated_address_records(address_records, page_number)
     return jsonify(result)
+
+
+def _hit_postgresql_with_sample_query():
+    # Hitting PostgreSQL database to see if it responds properly
+    db_access.get_title_register('non-existing-title')
+
+
+def _paginated_address_records(address_records, page_number):
+    # NOTE: our code uses the number of records reported by elasticsearch.
+    # Records that have been deleted are not included in the search results list.
+    nof_results = min(address_records.total, _get_max_number_search_results())
+    nof_pages = math.ceil(nof_results / _get_page_size())  # 0 if no results
+
+    if address_records:
+        title_numbers = [rec.title_number for rec in address_records]
+        titles = db_access.get_title_registers(title_numbers)
+        ordered = sorted(titles, key=lambda t: title_numbers.index(t.title_number))
+        title_dicts = [{'title_number': t.title_number, 'data': t.register_data} for t in ordered]
+    else:
+        title_dicts = []
+
+    return {'titles': title_dicts, 'number_pages': nof_pages, 'page_number': page_number,
+            'number_results': nof_results}
 
 
 def _check_postgresql_connection():
@@ -145,3 +142,11 @@ def _check_elasticsearch_connection():
             return ['Unexpected elasticsearch status: {}'.format(status)]
     except Exception as e:
         return ['Problem talking to elasticsearch: {0}'.format(str(e))]
+
+
+def _get_page_size():
+    return app.config['SEARCH_RESULTS_PER_PAGE']
+
+
+def _get_max_number_search_results():
+    return app.config['MAX_NUMBER_SEARCH_RESULTS']

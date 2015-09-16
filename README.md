@@ -20,9 +20,16 @@ To create a virtual env, run the following from a shell:
     pip install -r requirements.txt
 ```
 
-## Run the tests
+## Run unit tests
 
-To run the tests for the Digital Register, go to its folder and run `lr-run-tests`. 
+To run unit tests for the Digital Register, go to its folder and run `lr-run-tests`.
+
+## Run integration tests
+
+In order to run Digital Register API integration tests, go to its folder and run `./run_integration_tests.sh`.
+This script creates the test database (test_register_data) and test elasticsearch index (test-landregistry)
+and runs the tests against them.
+Make sure you have postgresql and elasticsearch services running (by executing the `lr-start-services` command).
 
 ## Run the acceptance tests
 
