@@ -18,3 +18,8 @@ Index('idx_last_modified_and_title_number', TitleRegisterData.last_modified,
       TitleRegisterData.title_number)
 
 Index('idx_title_uprns', TitleRegisterData.lr_uprns, postgresql_using='gin')
+
+
+class UprnMapping(db.Model):
+    uprn = db.Column(db.String(10), primary_key=True)
+    lr_uprn = db.Column(db.String(20), nullable=False)
