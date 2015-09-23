@@ -12,6 +12,10 @@ db_uri_template = 'postgresql+pg8000://{0}:{1}@{2}:{3}/{4}'
 sql_alchemy_uri = db_uri_template.format(user, password, host, port, database)
 logging_config_file_path = os.environ['LOGGING_CONFIG_FILE_PATH']
 fault_log_file_path = os.environ['FAULT_LOG_FILE_PATH']
+elasticsearch_endpoint_uri = os.environ['ELASTICSEARCH_ENDPOINT_URI']
+elasticsearch_index_name = os.environ['ELASTICSEARCH_INDEX_NAME']
+postcode_search_doc_type = os.environ['POSTCODE_SEARCH_DOC_TYPE']
+address_search_doc_type = os.environ['ADDRESS_SEARCH_DOC_TYPE']
 
 CONFIG_DICT = {
     'DEBUG': False,
@@ -19,9 +23,12 @@ CONFIG_DICT = {
     'SQLALCHEMY_DATABASE_URI': sql_alchemy_uri,
     'LOGGING_CONFIG_FILE_PATH': logging_config_file_path,
     'FAULT_LOG_FILE_PATH': fault_log_file_path,
-    'ELASTIC_SEARCH_ENDPOINT': os.environ['ELASTIC_SEARCH_ENDPOINT'],
+    'ELASTICSEARCH_ENDPOINT_URI': elasticsearch_endpoint_uri,
+    'ELASTICSEARCH_INDEX_NAME': elasticsearch_index_name,
     'MAX_NUMBER_SEARCH_RESULTS': max_number,
     'SEARCH_RESULTS_PER_PAGE': search_results,
+    'POSTCODE_SEARCH_DOC_TYPE': postcode_search_doc_type,
+    'ADDRESS_SEARCH_DOC_TYPE': address_search_doc_type,
 }  # type: Dict[str, Union[bool, str, int]]
 
 settings = os.environ.get('SETTINGS')
