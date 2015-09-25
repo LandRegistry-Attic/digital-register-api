@@ -4,7 +4,7 @@ import logging
 import logging.config                         # type: ignore
 import math
 
-from service import app, db_access, es_access
+from service import app, db_access, es_access, api_client
 
 INTERNAL_SERVER_ERROR_RESPONSE_BODY = json.dumps(
     {'error': 'Internal server error'}
@@ -83,8 +83,20 @@ def get_official_copy(title_ref):
 @app.route('/title_search_postcode/<postcode>', methods=['GET'])
 def get_properties_for_postcode(postcode):
     page_number = int(request.args.get('page', 0))
-    normalised_postcode = postcode.replace('_', '').replace(' ', '').upper()
-    address_records = es_access.get_properties_for_postcode(normalised_postcode, _get_page_size(), page_number)
+    normalised_postcode = postcode.replace('_', '').strip().upper()
+    # call Address_search_api to obtain list of AddressBase addresses
+    address_records = api_client.get_titles_by_postcode(normalised_postcode, page_number, _get_page_size())
+    # Iterate over dict collecting the AddressBase uprns to obtain the mapped LR_Uprns from PG
+    for address in address_records.get('data').get('addresses'):
+        address_base_uprn = address.get('uprn')
+        if address_base_uprn:
+            # using AB uprn get Land Registry's version
+            lr_uprn = db_access.get_mapped_lruprn(address_base_uprn)
+            # Now using LR_uprn obtain title details (currently title details and tenure)
+            title_details = db_access.get_title_number_and_register_data(lr_uprn)
+
+
+    ## address_records = es_access.get_properties_for_postcode(normalised_postcode, _get_page_size(), page_number)
     result = _paginated_address_records(address_records, page_number)
     return jsonify(result)
 

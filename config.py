@@ -16,6 +16,7 @@ elasticsearch_endpoint_uri = os.environ['ELASTICSEARCH_ENDPOINT_URI']
 elasticsearch_index_name = os.environ['ELASTICSEARCH_INDEX_NAME']
 postcode_search_doc_type = os.environ['POSTCODE_SEARCH_DOC_TYPE']
 address_search_doc_type = os.environ['ADDRESS_SEARCH_DOC_TYPE']
+address_search_api_url = os.environ['ADDRESS_SEARCH_API']
 
 CONFIG_DICT = {
     'DEBUG': False,
@@ -29,6 +30,7 @@ CONFIG_DICT = {
     'SEARCH_RESULTS_PER_PAGE': search_results,
     'POSTCODE_SEARCH_DOC_TYPE': postcode_search_doc_type,
     'ADDRESS_SEARCH_DOC_TYPE': address_search_doc_type,
+    'ADDRESS_SEARCH_API': address_search_api_url,
 }  # type: Dict[str, Union[bool, str, int]]
 
 settings = os.environ.get('SETTINGS')
