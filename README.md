@@ -86,3 +86,16 @@ Once you have a migration script, the next step is to apply it to the database.
 To do this run the upgrade command:
 
     python3 manage.py db upgrade
+
+## Populate the mapping table
+
+Once you have the new uprn_mapping table, you may want to have some data in it.
+
+    python3 import_uprn_mapping_data.py -file path/to/file.csv
+
+Some useful operators:
+
+    -file path/to/file.csv point it to a CSV file and away it goes.
+    -skip <number>     This will start the file read from <number>. Handy if the import stopped half way through a million records and you need to start again around 500000.
+    -overwrite         This will delete and replace any existing entries
+    -clear             This will clear the whole table and start again
