@@ -87,17 +87,23 @@ def get_properties_for_postcode(postcode):
     # call Address_search_api to obtain list of AddressBase addresses
     address_records = api_client.get_titles_by_postcode(normalised_postcode, page_number, _get_page_size())
     # Iterate over dict collecting the AddressBase uprns to obtain the mapped LR_Uprns from PG
-    for address in address_records.get('data').get('addresses'):
-        address_base_uprn = address.get('uprn')
-        if address_base_uprn:
-            # using AB uprn get Land Registry's version
-            lr_uprn = db_access.get_mapped_lruprn(address_base_uprn)
-            # Now using LR_uprn obtain title details (currently title details and tenure)
-            title_details = db_access.get_title_number_and_register_data(lr_uprn)
+    if address_records:
+        for address in address_records.get('data').get('addresses'):
+            address['title_number'] = 'not found'
+            address['tenure'] = ''
+            address_base_uprn = address.get('uprn')
+            if address_base_uprn:
+                # using AB uprn get Land Registry's version
+                lr_uprn_mapping = db_access.get_mapped_lruprn(address_base_uprn)
+                # Now using LR_uprn obtain some title details (currently title details and tenure)
+                if lr_uprn_mapping:
+                    title_details = db_access.get_title_number_and_register_data(lr_uprn_mapping.lr_uprn)
+                    if title_details:
+                        address['title_number'] = title_details.title_number
+                        address['tenure'] = title_details.register_data.get('tenure')
+                        address['register_data'] = title_details.register_data
 
-
-    ## address_records = es_access.get_properties_for_postcode(normalised_postcode, _get_page_size(), page_number)
-    result = _paginated_address_records(address_records, page_number)
+    result = _paginated_address_records_v2(address_records, page_number)
     return jsonify(result)
 
 
@@ -127,6 +133,19 @@ def _paginated_address_records(address_records, page_number):
         titles = db_access.get_title_registers(title_numbers)
         ordered = sorted(titles, key=lambda t: title_numbers.index(t.title_number))
         title_dicts = [{'title_number': t.title_number, 'data': t.register_data} for t in ordered]
+    else:
+        title_dicts = []
+
+    return {'titles': title_dicts, 'number_pages': nof_pages, 'page_number': page_number,
+            'number_results': nof_results}
+
+def _paginated_address_records_v2(address_records, page_number):
+    # NOTE: our code uses the number of records reported by elasticsearch.
+    # Records that have been deleted are not included in the search results list.
+    nof_results = min(address_records['data'].get('total'), _get_max_number_search_results())
+    nof_pages = math.ceil(nof_results / _get_page_size())  # 0 if no results
+    if address_records:
+        title_dicts = [{'title_number': address.get('title_number'), 'data': address.get('register_data'), 'address': address.get('joined_fields')} for address in address_records['data']['addresses']]
     else:
         title_dicts = []
 

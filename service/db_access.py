@@ -51,11 +51,12 @@ def get_official_copy_data(title_number):
 def get_title_number_and_register_data(lr_uprn):
     result = TitleRegisterData.query.options(
         Load(TitleRegisterData).load_only(
+            TitleRegisterData.lr_uprns,
             TitleRegisterData.title_number,
             TitleRegisterData.register_data
         )
     ).filter(
-        TitleRegisterData.lr_uprns == lr_uprn,
+        TitleRegisterData.lr_uprns.any(lr_uprn),
         TitleRegisterData.is_deleted == false()
     ).first()
 
