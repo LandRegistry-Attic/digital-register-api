@@ -5,7 +5,7 @@ from elasticsearch_dsl.utils import AttrList
 import mock
 
 from service import app
-from service.server import db_access, es_access
+from service.server import db_access, es_access, api_client
 
 FakeTitleRegisterData = namedtuple(
     'TitleRegisterData',
@@ -24,6 +24,30 @@ FakeElasticsearchPostcodeHit = namedtuple(
 
 TEST_EXCEPTION = Exception('Test exception')
 
+ES_RESULT = {
+    "data": {
+        "addresses": [
+            {
+                "building_name": "1 INGLEWOOD HOUSE",
+                "building_number": "",
+                "department_name": "",
+                "dependent_locality": "",
+                "dependent_thoroughfare_name": "",
+                "double_dependent_locality": "",
+                "entry_datetime": "2014-06-07T09:01:38+00",
+                "joined_fields": "1 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA",
+                "organisation_name": "",
+                "post_town": "EXETER",
+                "postcode": "EX1 1AA",
+                "sub_building_name": "",
+                "thoroughfare_name": "SIDWELL STREET",
+                "uprn": "1234",
+                "x_coordinate": 292772.0,
+                "y_coordinate": 93294.0
+            }]
+    }
+}
+
 
 def _get_page_size():
     return app.config['SEARCH_RESULTS_PER_PAGE']
@@ -41,6 +65,83 @@ def _get_empty_es_result(total=None):
     result.total = total if total else 0
     return result
 
+
+def _get_empty_api_client():
+    return {'data': {'addresses': [], 'total': 0, 'page_number': 0, 'page_size': 20}}
+
+
+def _get_one_result_from_api_client():
+    return {'data': {'addresses': [
+        {
+            "building_name": "1 INGLEWOOD HOUSE",
+            "building_number": "",
+            "department_name": "",
+            "dependent_locality": "",
+            "dependent_thoroughfare_name": "",
+            "double_dependent_locality": "",
+            "entry_datetime": "2014-06-07T09:01:38+00",
+            "joined_fields": "1 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA",
+            "organisation_name": "",
+            "post_town": "EXETER",
+            "postcode": "EX1 1AA",
+            "sub_building_name": "",
+            "thoroughfare_name": "SIDWELL STREET",
+            "uprn": "10023117067",
+            "x_coordinate": 292772.0,
+            "y_coordinate": 93294.0,
+            "title_number": "EX100",
+            "tenure": "freehold",
+            "register_data": "blah"
+        }], 'total': 1, 'page_number': 1, 'page_size': 20}}
+
+def _get_two_results_from_api_client():
+    return {'data': {'addresses': [
+        {
+            "building_name": "1 INGLEWOOD HOUSE",
+            "building_number": "",
+            "department_name": "",
+            "dependent_locality": "",
+            "dependent_thoroughfare_name": "",
+            "double_dependent_locality": "",
+            "entry_datetime": "2014-06-07T09:01:38+00",
+            "joined_fields": "1 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA",
+            "organisation_name": "",
+            "post_town": "EXETER",
+            "postcode": "EX1 1AA",
+            "sub_building_name": "",
+            "thoroughfare_name": "SIDWELL STREET",
+            "uprn": "10023117067",
+            "x_coordinate": 292772.0,
+            "y_coordinate": 93294.0,
+            "title_number": "EX100",
+            "tenure": "freehold",
+            "register_data": "blah"
+        },
+        {
+            "building_name": "2 INGLEWOOD HOUSE",
+            "building_number": "",
+            "department_name": "",
+            "dependent_locality": "",
+            "dependent_thoroughfare_name": "",
+            "double_dependent_locality": "",
+            "entry_datetime": "2014-06-07T09:01:38+00",
+            "joined_fields": "2 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA",
+            "organisation_name": "",
+            "post_town": "EXETER",
+            "postcode": "EX1 1AA",
+            "sub_building_name": "",
+            "thoroughfare_name": "SIDWELL STREET",
+            "uprn": "10023117067",
+            "x_coordinate": 292772.0,
+            "y_coordinate": 93294.0,
+            "title_number": "EX101",
+            "tenure": "freehold",
+            "register_data": "blah"
+        }], 'total': 2, 'page_number': 1, 'page_size': 20}}
+
+
+def _get_api_client_response_when_es_finds_but_no_pg_result():
+    return {'data': {'addresses': [], 'total': 1, 'page_number': 1, 'page_size': 20}}
 
 def _get_es_address_results(*title_numbers, total=None):
     result = AttrList([_get_es_address_result(i) for i in title_numbers])
@@ -234,28 +335,28 @@ class TestGetPropertiesForPostcode:
         self.app = app.test_client()
 
     @mock.patch.dict(app.config, {'SEARCH_RESULTS_PER_PAGE': 321})
-    @mock.patch.object(es_access, 'get_properties_for_postcode', return_value=_get_empty_es_result())
-    def test_get_properties_for_postcode_calls_es_access_with_page_number_and_normalised_postcode(
+    @mock.patch.object(api_client, 'get_titles_by_postcode', return_value=_get_empty_api_client())
+    def test_get_properties_for_postcode_calls_db_access_with_page_number_and_normalised_postcode(
             self, mock_get_properties):
 
-        postcode = '  Sw1 1_2 dR '
-        normalised_postcode = 'SW112DR'
+        postcode = '  Sw11_ 2dR '
+        normalised_postcode = 'SW11 2DR'
         page_number = 123
 
         self.app.get('/title_search_postcode/{}?page={}'.format(postcode, page_number))
 
-        mock_get_properties.assert_called_once_with(normalised_postcode, 321, page_number)
+        mock_get_properties.assert_called_once_with(normalised_postcode, page_number, 321)
 
-    @mock.patch.object(es_access, 'get_properties_for_postcode', return_value=_get_empty_es_result())
+    @mock.patch.object(api_client, 'get_titles_by_postcode', return_value=_get_empty_api_client())
     def test_get_properties_for_postcode_calls_es_access_with_default_page_number_when_not_provided(
             self, mock_get_properties):
 
-        postcode = 'SW112DR'
+        postcode = 'SW11 2DR'
         self.app.get('/title_search_postcode/{}'.format(postcode))
 
-        mock_get_properties.assert_called_once_with(postcode, _get_page_size(), 0)
+        mock_get_properties.assert_called_once_with(postcode, 0, _get_page_size())
 
-    @mock.patch.object(es_access, 'get_properties_for_postcode', side_effect=TEST_EXCEPTION)
+    @mock.patch.object(api_client, 'get_titles_by_postcode', side_effect=TEST_EXCEPTION)
     def test_get_properties_for_postcode_returns_generic_error_response_when_fails(self, mock_get_properties):
         response = self.app.get('/title_search_postcode/SW112DR')
 
@@ -264,129 +365,91 @@ class TestGetPropertiesForPostcode:
         json_body = json.loads(response.data.decode())
         assert json_body == {'error': 'Internal server error'}
 
-    @mock.patch.object(db_access, 'get_title_registers', return_value=_get_titles(1))
-    def test_get_properties_for_postcode_calls_db_access_with_data_from_elasticsearch(
+    @mock.patch.object(db_access, 'get_mapped_lruprn', return_value=_get_titles(1))
+    def test_get_properties_for_postcode_calls_db_access_with_uprn_from_elasticsearch(
             self, mock_get_registers):
 
-        with mock.patch('service.server.es_access.get_properties_for_postcode') as mock_get_properties:
-            mock_get_properties.return_value = _get_es_postcode_results(1, 2, 3, 4)
-            self.app.get('/title_search_postcode/SW112DR')
+        with mock.patch('service.server.api_client.get_titles_by_postcode') as mock_get_properties:
+            mock_get_properties.return_value = ES_RESULT
+            self.app.get('/title_search_postcode/SW11 2DR')
 
-        mock_get_registers.assert_called_once_with(['1', '2', '3', '4'])
+        mock_get_registers.assert_called_once_with('1234')
 
-    @mock.patch.object(es_access, 'get_properties_for_postcode', return_value=_get_es_postcode_results(1, 2))
-    @mock.patch.object(db_access, 'get_title_registers', return_value=_get_titles(1, 2))
+    @mock.patch.object(api_client, 'get_titles_by_postcode', return_value=_get_one_result_from_api_client())
     def test_get_properties_for_postcode_returns_response_in_correct_format(
-            self, mock_get_registers, mock_get_properties):
+            self, mock_get_titles):
 
-        response = self.app.get('/title_search_postcode/SW112DR')
+        response = self.app.get('/title_search_postcode/SW11%202DR')
         assert response.status_code == 200
         json_body = json.loads(response.data.decode())
         assert json_body == {
             'number_pages': 1,
-            'number_results': 2,
+            'number_results': 1,
             'page_number': 0,
             'titles': [
-                {'data': {'register': 'data 1'}, 'title_number': '1'},
-                {'data': {'register': 'data 2'}, 'title_number': '2'}
+                {'address': '1 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA', 'data': 'blah', 'title_number': 'not found'}
             ]
         }
 
-    @mock.patch.object(es_access, 'get_properties_for_postcode', return_value=_get_es_postcode_results(3, 1, 2))
-    @mock.patch.object(db_access, 'get_title_registers', return_value=_get_titles(1, 2, 3))
-    def test_get_properties_for_postcode_returns_titles_in_order_given_by_es_access(
-            self, mock_get_registers, mock_get_properties):
+    @mock.patch.object(api_client, 'get_titles_by_postcode', return_value=_get_two_results_from_api_client())
+    def test_get_properties_for_postcode_returns_titles_in_order_given_by_api_client(
+            self, mock_get_titles):
 
-            response = self.app.get('/title_search_postcode/SW112DR')
+            response = self.app.get('/title_search_postcode/SW11%202DR')
 
             assert response.status_code == 200
             json_body = json.loads(response.data.decode())
             assert 'titles' in json_body
             assert json_body['titles'] == [
-                {'data': {'register': 'data 3'}, 'title_number': '3'},
-                {'data': {'register': 'data 1'}, 'title_number': '1'},
-                {'data': {'register': 'data 2'}, 'title_number': '2'},
+                {'data': 'blah', 'title_number': 'not found', 'address': '1 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA'},
+                {'data': 'blah', 'title_number': 'not found', 'address': '2 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA'}
             ]
 
-    @mock.patch.object(es_access, 'get_properties_for_postcode', return_value=_get_es_postcode_results(1, 2, total=4))
-    @mock.patch.object(db_access, 'get_title_registers', return_value=_get_titles(1, 2))
-    def test_get_properties_for_postcode_response_contains_right_number_of_pages_when_last_page_full(
-            self, mock_get_registers, mock_get_properties):
-
-        page_size = 2
-
-        with mock.patch.dict(app.config, {'SEARCH_RESULTS_PER_PAGE': page_size}):
-            response = self.app.get('/title_search_postcode/SW112DR?page=1')
-
-            assert response.status_code == 200
-            json_body = json.loads(response.data.decode())
-            assert 'page_number' in json_body
-            assert json_body['number_pages'] == 2
-
-    @mock.patch.object(es_access, 'get_properties_for_postcode', return_value=_get_es_postcode_results(1, total=4))
-    @mock.patch.object(db_access, 'get_title_registers', return_value=_get_titles(1))
-    def test_get_properties_for_postcode_response_contains_right_number_of_pages_when_last_page_not_full(
-            self, mock_get_registers, mock_get_properties):
-
-        page_size = 2
-
-        with mock.patch.dict(app.config, {'SEARCH_RESULTS_PER_PAGE': page_size}):
-            response = self.app.get('/title_search_postcode/SW112DR?page=1')
-
-            assert response.status_code == 200
-            json_body = json.loads(response.data.decode())
-            assert 'page_number' in json_body
-            assert json_body['number_pages'] == 2
-
-    @mock.patch.object(es_access, 'get_properties_for_postcode', return_value=_get_es_postcode_results(1, total=200))
-    @mock.patch.object(db_access, 'get_title_registers', return_value=_get_titles(1))
-    def test_get_properties_for_postcode_response_contains_requested_page_number_when_present(
-            self, mock_get_properties, mock_get_registers):
+    def test_get_properties_for_postcode_response_contains_requested_page_number_when_present(self):
 
         requested_page_number = 12
 
-        response = self.app.get('/title_search_postcode/SW112DR?page={}'.format(requested_page_number))
+        response = self.app.get('/title_search_postcode/SW11%202DR?page={}'.format(requested_page_number))
 
         assert response.status_code == 200
         json_body = json.loads(response.data.decode())
         assert 'page_number' in json_body
         assert json_body['page_number'] == requested_page_number
 
-    @mock.patch.object(es_access, 'get_properties_for_postcode', return_value=_get_es_postcode_results(total=10))
-    @mock.patch.object(db_access, 'get_title_registers', return_value=_get_titles(1))
+    @mock.patch.object(api_client, 'get_titles_by_postcode', return_value=_get_api_client_response_when_es_finds_but_no_pg_result())
     def test_get_properties_for_postcode_returns_requested_page_number_when_it_does_not_exist(
-            self, mock_get_registers, mock_get_properties):
+            self, mock_get_titles):
 
         requested_page_number = 3
         page_size = 5
 
         with mock.patch.dict(app.config, {'SEARCH_RESULTS_PER_PAGE': page_size}):
-            response = self.app.get('/title_search_postcode/SW112DR?page={}'.format(requested_page_number))
+            response = self.app.get('/title_search_postcode/SW11%202DR?page={}'.format(requested_page_number))
 
             assert response.status_code == 200
             json_body = json.loads(response.data.decode())
             assert 'page_number' in json_body
             assert json_body == {
-                'number_pages': 2,
-                'number_results': 10,
+                'number_pages': 1,
+                'number_results': 1,
                 'page_number': requested_page_number,
                 'titles': []
             }
 
-    @mock.patch.object(es_access, 'get_properties_for_postcode', return_value=_get_empty_es_result())
-    def test_get_properties_for_postcode_returns_right_response_when_no_results_from_es(self, mock_get_properties):
-        response = self.app.get('/title_search_postcode/SW112DR')
+    @mock.patch.object(api_client, 'get_titles_by_postcode', return_value=_get_empty_api_client())
+    def test_get_properties_for_postcode_returns_right_response_when_no_results_from_api_client(self, mock_get_properties):
+        response = self.app.get('/title_search_postcode/SW11%202DR')
 
         assert response.status_code == 200
         json_body = json.loads(response.data.decode())
         assert json_body == {'number_pages': 0, 'number_results': 0, 'page_number': 0, 'titles': []}
 
-    @mock.patch.object(es_access, 'get_properties_for_postcode', return_value=_get_es_postcode_results(1, total=1))
-    @mock.patch.object(db_access, 'get_title_registers', return_value=[])
+    @mock.patch.object(api_client, 'get_titles_by_postcode', return_value=_get_api_client_response_when_es_finds_but_no_pg_result())
+    @mock.patch.object(db_access, 'get_mapped_lruprn', return_value=None)
     def test_get_properties_for_postcode_returns_right_response_when_no_results_from_pg(
-            self, mock_get_registers, mock_get_properties):
+            self, mock_get_titles, mock_get_mapped_lruprn):
 
-        response = self.app.get('/title_search_postcode/SW112DR')
+        response = self.app.get('/title_search_postcode/SW11%202DR')
 
         assert response.status_code == 200
         json_body = json.loads(response.data.decode())
