@@ -94,6 +94,7 @@ def _get_one_result_from_api_client():
             "register_data": "blah"
         }], 'total': 1, 'page_number': 1, 'page_size': 20}}
 
+
 def _get_two_results_from_api_client():
     return {'data': {'addresses': [
         {
@@ -142,6 +143,7 @@ def _get_two_results_from_api_client():
 
 def _get_api_client_response_when_es_finds_but_no_pg_result():
     return {'data': {'addresses': [], 'total': 1, 'page_number': 1, 'page_size': 20}}
+
 
 def _get_es_address_results(*title_numbers, total=None):
     result = AttrList([_get_es_address_result(i) for i in title_numbers])

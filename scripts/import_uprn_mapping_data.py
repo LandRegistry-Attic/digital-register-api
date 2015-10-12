@@ -2,9 +2,9 @@
 import argparse
 import csv
 import logging
-from logging.config import dictConfig
+from logging.config import dictConfig  # type: ignore
 import os
-import pg8000
+import pg8000  # type: ignore
 
 LOGGER = logging.getLogger(__name__)
 
@@ -117,6 +117,7 @@ def _log_data_import_started(input_file_path, lines_to_skip, clear_data, overwri
 
 def _log_records_saved(number_of_records, total):
     LOGGER.info('Saved {} records. Total saved: {}'.format(number_of_records, total))
+
 
 def _setup_logging():
     try:

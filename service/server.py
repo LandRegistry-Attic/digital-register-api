@@ -139,6 +139,7 @@ def _paginated_address_records(address_records, page_number):
     return {'titles': title_dicts, 'number_pages': nof_pages, 'page_number': page_number,
             'number_results': nof_results}
 
+
 def _paginated_address_records_v2(address_records, page_number):
     # NOTE: our code uses the number of records reported by elasticsearch.
     # Records that have been deleted are not included in the search results list.

@@ -62,6 +62,7 @@ def get_title_number_and_register_data(lr_uprn):
 
     return result
 
+
 def get_mapped_lruprn(address_base_uprn):
         result = UprnMapping.query.options(
             Load(UprnMapping).load_only(
