@@ -407,7 +407,8 @@ class TestGetPropertiesForPostcode:
                 {'data': 'blah', 'title_number': 'not found', 'address': '2 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA'}
             ]
 
-    def test_get_properties_for_postcode_response_contains_requested_page_number_when_present(self):
+    @mock.patch.object(api_client, 'get_titles_by_postcode', return_value=_get_two_results_from_api_client())
+    def test_get_properties_for_postcode_response_contains_requested_page_number_when_present(self, mock_get_titles):
 
         requested_page_number = 12
 
