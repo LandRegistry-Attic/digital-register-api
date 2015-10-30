@@ -12,6 +12,10 @@ FakeTitleRegisterData = namedtuple(
     ['title_number', 'register_data', 'geometry_data', 'official_copy_data']
 )
 
+FakeUprnMapping = namedtuple(
+    'UprnMapping',
+    ['uprn', 'lr_uprn'])
+
 FakeElasticsearchAddressHit = namedtuple(
     'Hit',
     ['title_number', 'address_string', 'entry_datetime']
@@ -180,6 +184,13 @@ def _get_sample_title(number):
         {'register': 'data {}'.format(number)},
         {'geometry': 'geodata {}'.format(number)},
         {'sub_registers': [{'A': 'register A {}'.format(number)}]},
+    )
+
+
+def _get_sample_uprn():
+    return FakeUprnMapping(
+        uprn='1234',
+        lr_uprn='1234'
     )
 
 
@@ -378,8 +389,10 @@ class TestGetPropertiesForPostcode:
         mock_get_registers.assert_called_once_with('1234')
 
     @mock.patch.object(api_client, 'get_titles_by_postcode', return_value=_get_one_result_from_api_client())
+    @mock.patch.object(db_access, 'get_mapped_lruprn', return_value=_get_sample_uprn())
+    @mock.patch.object(db_access, 'get_title_number_and_register_data', return_value=_get_sample_title(1))
     def test_get_properties_for_postcode_returns_response_in_correct_format(
-            self, mock_get_titles):
+            self, mock_get_titles, mock_get_mapped_lruprn, get_title_and_register_data):
 
         response = self.app.get('/title_search_postcode/SW11%202DR')
         assert response.status_code == 200
@@ -389,13 +402,15 @@ class TestGetPropertiesForPostcode:
             'number_results': 1,
             'page_number': 0,
             'titles': [
-                {'address': '1 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA', 'data': 'blah', 'title_number': 'not found'}
+                {'address': '1 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA', 'data': {'register': 'data 1'}, 'title_number': '1'}
             ]
         }
 
     @mock.patch.object(api_client, 'get_titles_by_postcode', return_value=_get_two_results_from_api_client())
+    @mock.patch.object(db_access, 'get_mapped_lruprn', return_value=_get_sample_uprn())
+    @mock.patch.object(db_access, 'get_title_number_and_register_data', return_value=_get_sample_title(1))
     def test_get_properties_for_postcode_returns_titles_in_order_given_by_api_client(
-            self, mock_get_titles):
+            self, mock_get_titles, mock_get_mapped_lruprn, get_title_and_register_data):
 
             response = self.app.get('/title_search_postcode/SW11%202DR')
 
@@ -403,12 +418,17 @@ class TestGetPropertiesForPostcode:
             json_body = json.loads(response.data.decode())
             assert 'titles' in json_body
             assert json_body['titles'] == [
-                {'data': 'blah', 'title_number': 'not found', 'address': '1 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA'},
-                {'data': 'blah', 'title_number': 'not found', 'address': '2 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA'}
+                {'address': '1 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA', 'data': {'register': 'data 1'}, 'title_number': '1'},
+                {'address': '2 INGLEWOOD HOUSE, SIDWELL STREET, EXETER, EX1 1AA', 'data': {'register': 'data 1'}, 'title_number': '1'}
             ]
 
     @mock.patch.object(api_client, 'get_titles_by_postcode', return_value=_get_two_results_from_api_client())
-    def test_get_properties_for_postcode_response_contains_requested_page_number_when_present(self, mock_get_titles):
+    @mock.patch.object(db_access, 'get_mapped_lruprn', return_value=_get_sample_uprn())
+    @mock.patch.object(db_access, 'get_title_number_and_register_data', return_value=_get_sample_title(1))
+    def test_get_properties_for_postcode_response_contains_requested_page_number_when_present(self,
+                                                                                              mock_get_titles,
+                                                                                              mock_get_mapped_lruprn,
+                                                                                              get_title_and_register_data):
 
         requested_page_number = 12
 
