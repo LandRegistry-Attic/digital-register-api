@@ -151,7 +151,10 @@ def _parse_command_line_args():
 
 
 def _insert_mapping_data(db_cursor, rows):
-    db_cursor.executemany('insert into uprn_mapping (uprn, lr_uprn) values (%s, %s)', rows)
+    try:
+        db_cursor.executemany('insert into uprn_mapping (uprn, lr_uprn) values (%s, %s)', rows)
+    except Exception:
+        LOGGER.error('An error occurred whilst inserting rows. The process will carry on and skip this one.')
 
 
 def _delete_entries_by_uprn(db_cursor, uprns):
