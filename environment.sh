@@ -9,6 +9,7 @@ export LOGGING_CONFIG_FILE_PATH='logging_config.json'
 export FAULT_LOG_FILE_PATH='/var/log/applications/digital-register-api-fault.log'
 export ELASTICSEARCH_ENDPOINT_URI='http://localhost:9200'
 export ELASTICSEARCH_INDEX_NAME='landregistry'
+export ADDRESS_SEARCH_API='http://landregistry.local:8002/'
 export MAX_NUMBER_SEARCH_RESULTS=50
 export PYTHONPATH=.
 export SEARCH_RESULTS_PER_PAGE=20

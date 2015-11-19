@@ -7,10 +7,10 @@ from service import db_access
 
 INSERT_TITLE_QUERY_FORMAT = (
     'insert into title_register_data('
-    'title_number, register_data, geometry_data, is_deleted, last_modified, official_copy_data'
+    'title_number, register_data, geometry_data, is_deleted, last_modified, official_copy_data, lr_uprns'
     ')'
     'values('
-    '%s, %s, %s, %s, %s, %s'
+    "%s, %s, %s, %s, %s, %s, '{{ {} }}'"
     ')'
 )
 
@@ -66,8 +66,9 @@ class TestDbAccess:
         is_deleted = False
         last_modified = datetime(2015, 9, 10, 12, 34, 56, 123)
         official_copy_data = {'official': 'copy'}
+        lr_uprns = ['123', '456']
 
-        self._create_title(title_number, register_data, geometry_data, is_deleted, last_modified, official_copy_data)
+        self._create_title(title_number, register_data, geometry_data, is_deleted, last_modified, official_copy_data, lr_uprns)
 
         title = db_access.get_title_register(title_number)
         assert title is not None
@@ -77,6 +78,7 @@ class TestDbAccess:
         assert title.is_deleted == is_deleted
         assert title.last_modified.timestamp() == last_modified.timestamp()
         assert title.official_copy_data == official_copy_data
+        assert title.lr_uprns == lr_uprns
 
     def test_get_title_registers_returns_titles_with_right_content(self):
         title_number = 'title123'
@@ -85,8 +87,9 @@ class TestDbAccess:
         is_deleted = False
         last_modified = datetime(2015, 9, 10, 12, 34, 56, 123)
         official_copy_data = {'official': 'copy'}
+        lr_uprns = ['123', '456']
 
-        self._create_title(title_number, register_data, geometry_data, is_deleted, last_modified, official_copy_data)
+        self._create_title(title_number, register_data, geometry_data, is_deleted, last_modified, official_copy_data, lr_uprns)
 
         titles = db_access.get_title_registers([title_number])
 
@@ -100,6 +103,7 @@ class TestDbAccess:
         assert title.is_deleted == is_deleted
         assert title.last_modified.timestamp() == last_modified.timestamp()
         assert title.official_copy_data == official_copy_data
+        assert title.lr_uprns == lr_uprns
 
     def test_get_title_registers_returns_list_with_all_existing_titles(self):
         existing_title_numbers = {'title1', 'title2', 'title3'}
@@ -153,8 +157,9 @@ class TestDbAccess:
         is_deleted = False
         last_modified = datetime(2015, 9, 10, 12, 34, 56, 123)
         official_copy_data = {'official': 'copy'}
+        lr_uprns = ['123', '456']
 
-        self._create_title(title_number, register_data, geometry_data, is_deleted, last_modified, official_copy_data)
+        self._create_title(title_number, register_data, geometry_data, is_deleted, last_modified, official_copy_data, lr_uprns)
 
         title = db_access.get_official_copy_data(title_number)
         assert title is not None
@@ -164,6 +169,7 @@ class TestDbAccess:
         assert title.is_deleted == is_deleted
         assert title.last_modified.timestamp() == last_modified.timestamp()
         assert title.official_copy_data == official_copy_data
+        assert title.lr_uprns == lr_uprns
 
     def _get_title_numbers(self, titles):
         return set(map(lambda title: title.title_number, titles))
@@ -175,21 +181,27 @@ class TestDbAccess:
             geometry_data={},
             is_deleted=False,
             last_modified=datetime.now(),
-            official_copy_data={}):
+            official_copy_data={},
+            lr_uprns=[]):
+
+        print(INSERT_TITLE_QUERY_FORMAT.format(self._get_string_list_for_pg(lr_uprns)))
 
         self.connection.cursor().execute(
-            INSERT_TITLE_QUERY_FORMAT,
+            INSERT_TITLE_QUERY_FORMAT.format(self._get_string_list_for_pg(lr_uprns)),
             (
                 title_number,
                 json.dumps(register_data),
                 json.dumps(geometry_data),
                 is_deleted,
                 last_modified,
-                json.dumps(official_copy_data)
+                json.dumps(official_copy_data),
             )
         )
 
         return self.connection.commit()
+
+    def _get_string_list_for_pg(self, strings):
+        return ','.join(['"{}"'.format(s) for s in strings])
 
     def _delete_all_titles(self):
         self.connection.cursor().execute(DELETE_ALL_TITLES_QUERY)
