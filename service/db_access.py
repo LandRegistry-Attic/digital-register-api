@@ -59,9 +59,11 @@ def get_title_number_and_register_data(lr_uprn):
     ).filter(
         TitleRegisterData.lr_uprns.contains(amended_lr_uprn),
         TitleRegisterData.is_deleted == false()
-    ).first()
-
-    return result
+    ).all()
+    if result:
+        return result[0]
+    else:
+        return None
 
 
 def get_mapped_lruprn(address_base_uprn):
