@@ -3,6 +3,9 @@ from sqlalchemy import Index                     # type: ignore
 
 from service import db
 
+# N.B.: 'Index' is only used if *additional* index required!
+#       [Index is created automatically per 'primary_key' setting].
+
 
 class TitleRegisterData(db.Model):  # type: ignore
     title_number = db.Column(db.String(10), primary_key=True)
