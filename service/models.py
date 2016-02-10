@@ -3,6 +3,9 @@ from sqlalchemy import Index                     # type: ignore
 
 from service import db
 
+# N.B.: 'Index' is only used if *additional* index required!
+#       [Index is created automatically per 'primary_key' setting].
+
 
 class TitleRegisterData(db.Model):  # type: ignore
     title_number = db.Column(db.String(10), primary_key=True)
@@ -24,4 +27,13 @@ class UprnMapping(db.Model):  # type: ignore
     uprn = db.Column(db.String(20), primary_key=True)
     lr_uprn = db.Column(db.String(20), nullable=False)
 
-Index('uprn_mapping_pkey', UprnMapping.uprn)
+
+class TitleSummaryView(db.Model):  # type: ignore
+    """
+    User can only access results of query if view is paid for, user is logged in and has not already viewed.
+    """
+
+    transaction_id = db.Column(db.String(30), nullable=False, primary_key=True)     # 'transId' from Worldpay.
+    title_number = db.Column(db.String(20), nullable=False)
+    viewed_time = db.Column(db.DateTime(timezone=True), nullable=True)
+    user_id = db.Column(db.String(20), nullable=False)
