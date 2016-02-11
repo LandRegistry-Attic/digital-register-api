@@ -11,14 +11,14 @@ def save_user_search_details(params):
 
     user_search_request = UserSearchAndResults\
                             (
-                            params['MC_timestamp'],
-                            params['user_id'],
-                            params['MC_titleNumber'],
-                            params['MC_searchType'],
-                            params['MC_purchaseType'],
-                            params['amount'],
-                            params['cartId'],
-                            None
+                            viewed_time=params['MC_timestamp'],
+                            user_id=params['user_id'],
+                            title_number=params['MC_titleNumber'],
+                            search_type=params['MC_searchType'],
+                            purchase_type=params['MC_purchaseType'],
+                            amount=params['amount'],
+                            cart_id=params['cartId'],
+                            transaction_id=None
                             )
 
     db.session.add(user_search_request)
