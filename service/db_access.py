@@ -1,7 +1,37 @@
 from sqlalchemy import false                                 # type: ignore
 from sqlalchemy.orm.strategy_options import load_only, Load  # type: ignore
+from service import db
+from service.models import TitleRegisterData, UprnMapping, UserSearchAndResults
 
-from service.models import TitleRegisterData, UprnMapping
+
+def save_user_search_details(params):
+    """
+    Save user's search request details, for audit purposes.
+    """
+
+    user_search_request = UserSearchAndResults\
+                            (
+                            params['MC_timestamp'],
+                            params['user_id'],
+                            params['MC_titleNumber'],
+                            params['MC_searchType'],
+                            params['MC_purchaseType'],
+                            params['amount'],
+                            params['cartId'],
+                            None
+                            )
+
+    db.session.add(user_search_request)
+    db.session.commit()
+
+
+def get_user_view(user_id, timestamp):
+    """
+    Get user's view details, after payment.
+    """
+
+    view = UserSearchAndResults.query.filter_by(user_id=user_id, viewed_time=timestamp).first()
+    return view
 
 
 def get_title_register(title_number):

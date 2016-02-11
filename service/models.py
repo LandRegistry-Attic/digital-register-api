@@ -28,12 +28,18 @@ class UprnMapping(db.Model):  # type: ignore
     lr_uprn = db.Column(db.String(20), nullable=False)
 
 
-class TitleSummaryView(db.Model):  # type: ignore
+class UserSearchAndResults(db.Model):  # type: ignore
     """
-    User can only access results of query if view is paid for, user is logged in and has not already viewed.
+    Store details of user view (for audit purposes) and update after payment (for reconciliation).
     """
 
-    transaction_id = db.Column(db.String(30), nullable=False, primary_key=True)     # 'transId' from Worldpay.
+    # As several users may be viewing at the same time, we need a compound primary key.
+    # Note that WebSeal prevents a user from being logged in at multiple places concurrently.
+    viewed_time = db.Column(db.DateTime(timezone=True), nullable=False, primary_key=True)
+    user_id = db.Column(db.String(20), nullable=False, primary_key=True)
     title_number = db.Column(db.String(20), nullable=False)
-    viewed_time = db.Column(db.DateTime(timezone=True), nullable=True)
-    user_id = db.Column(db.String(20), nullable=False)
+    search_type = db.Column(db.String(20), nullable=False)
+    purchase_type = db.Column(db.String(1), nullable=False)
+    amount = db.Column(db.String(10), nullable=False)
+    cart_id = db.Column(db.String(30), nullable=True)
+    transaction_id = db.Column(db.String(30), nullable=True)     # Reconciliation: 'transId' from Worldpay.
