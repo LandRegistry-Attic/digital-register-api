@@ -117,6 +117,13 @@ def get_titles_for_address(address):
     return jsonify(result)
 
 
+@app.route('/save_search_request', methods=['POST'])
+def save_search_request():
+    # N.B.: "request.form" is a 'multidict', so need to flatten it first; assume single value per key.
+    form_dict = request.form.to_dict()
+    db_access.save_user_search_details(form_dict)
+
+
 def _hit_postgresql_with_sample_query():
     # Hitting PostgreSQL database to see if it responds properly
     db_access.get_title_register('non-existing-title')
