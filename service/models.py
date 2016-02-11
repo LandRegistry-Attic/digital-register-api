@@ -43,3 +43,16 @@ class UserSearchAndResults(db.Model):  # type: ignore
     amount = db.Column(db.String(10), nullable=False)
     cart_id = db.Column(db.String(30), nullable=True)
     transaction_id = db.Column(db.String(30), nullable=True)     # Reconciliation: 'transId' from Worldpay.
+
+    def __init__(self, viewed_time, user_id, title_number, search_type, purchase_type, amount, cart_id, transaction_id):
+        self.viewed_time = viewed_time
+        self.user_id = user_id
+        self.title_number = title_number
+        self.search_type = search_type
+        self.purchase_type = purchase_type
+        self.amount = amount
+        self.cart_id = cart_id
+        self.transaction_id = transaction_id
+
+    def __repr__(self):
+        return '<user_id %r>' % self.user_id

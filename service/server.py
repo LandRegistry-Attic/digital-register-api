@@ -124,6 +124,12 @@ def save_search_request():
     db_access.save_user_search_details(form_dict)
 
 
+@app.route('/get_user_view<username><timestamp>', methods=['GET'])
+def get_user_view(username, timestamp):
+    result = db_access.get_user_view(username, timestamp)
+    return result
+
+
 def _hit_postgresql_with_sample_query():
     # Hitting PostgreSQL database to see if it responds properly
     db_access.get_title_register('non-existing-title')
