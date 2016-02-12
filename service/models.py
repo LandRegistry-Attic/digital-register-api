@@ -24,4 +24,3 @@ class UprnMapping(db.Model):  # type: ignore
     uprn = db.Column(db.String(20), primary_key=True)
     lr_uprn = db.Column(db.String(20), nullable=False)
 
-Index('uprn_mapping_pkey', UprnMapping.uprn)
