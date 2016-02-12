@@ -123,6 +123,7 @@ def save_search_request():
     form_dict = request.form.to_dict()
     db_access.save_user_search_details(form_dict)
 
+    return "ok", 200
 
 @app.route('/get_user_view<username><timestamp>', methods=['GET'])
 def get_user_view(username, timestamp):

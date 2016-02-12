@@ -33,16 +33,21 @@ class UserSearchAndResults(db.Model):  # type: ignore
     Store details of user view (for audit purposes) and update after payment (for reconciliation).
     """
 
-    # As several users may be viewing at the same time, we need a compound primary key.
-    # Note that WebSeal prevents a user from being logged in at multiple places concurrently.
-    viewed_time = db.Column(db.DateTime(timezone=True), nullable=False, primary_key=True)
+    # As several users may be searching at the same time, we need a compound primary key.
+    # Note that WebSeal prevents a user from being logged in from multiple places concurrently.
+    search_datetime = db.Column(db.DateTime(timezone=True), nullable=False, primary_key=True)
     user_id = db.Column(db.String(20), nullable=False, primary_key=True)
     title_number = db.Column(db.String(20), nullable=False)
     search_type = db.Column(db.String(20), nullable=False)
     purchase_type = db.Column(db.String(1), nullable=False)
     amount = db.Column(db.String(10), nullable=False)
     cart_id = db.Column(db.String(30), nullable=True)
-    transaction_id = db.Column(db.String(30), nullable=True)     # Reconciliation: 'transId' from Worldpay.
+
+    # Post-payment items: these (or the like) are also held in the 'transaction_data' DB.
+    # TODO: Ideally they should be fetched from there instead, via the 'search_datetime' key.
+    transaction_id = db.Column(db.String(30), nullable=True)                # Reconciliation: 'transId' from Worldpay.
+    viewed_datetime = db.Column(db.DateTime(timezone=True), nullable=True)  # If null, user has yet to view the results.
+
 
     def __init__(self, viewed_time, user_id, title_number, search_type, purchase_type, amount, cart_id, transaction_id):
         self.viewed_time = viewed_time
@@ -55,4 +60,4 @@ class UserSearchAndResults(db.Model):  # type: ignore
         self.transaction_id = transaction_id
 
     def __repr__(self):
-        return '<user_id %r>' % self.user_id
+        return '<transaction_id %r>' % self.transaction_id
