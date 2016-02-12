@@ -18,7 +18,6 @@ def save_user_search_details(params):
                             purchase_type=params['MC_purchaseType'],
                             amount=params['amount'],
                             cart_id=params['cartId'],
-                            transaction_id=None
                             )
 
     db.session.add(user_search_request)
