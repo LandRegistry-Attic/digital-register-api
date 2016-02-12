@@ -49,15 +49,14 @@ class UserSearchAndResults(db.Model):  # type: ignore
     viewed_datetime = db.Column(db.DateTime(timezone=True), nullable=True)  # If null, user has yet to view the results.
 
 
-    def __init__(self, viewed_time, user_id, title_number, search_type, purchase_type, amount, cart_id, transaction_id):
-        self.viewed_time = viewed_time
+    def __init__(self, search_datetime, user_id, title_number, search_type, purchase_type, amount, cart_id, transaction_id):
+        self.search_datetime = search_datetime
         self.user_id = user_id
         self.title_number = title_number
         self.search_type = search_type
         self.purchase_type = purchase_type
         self.amount = amount
         self.cart_id = cart_id
-        self.transaction_id = transaction_id
 
     def __repr__(self):
         return '<transaction_id %r>' % self.transaction_id
