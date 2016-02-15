@@ -23,4 +23,3 @@ Index('idx_title_uprns', TitleRegisterData.lr_uprns, postgresql_using='gin')
 class UprnMapping(db.Model):  # type: ignore
     uprn = db.Column(db.String(20), primary_key=True)
     lr_uprn = db.Column(db.String(20), nullable=False)
-
