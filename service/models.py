@@ -48,8 +48,17 @@ class UserSearchAndResults(db.Model):  # type: ignore
     transaction_id = db.Column(db.String(30), nullable=True)                # Reconciliation: 'transId' from Worldpay.
     viewed_datetime = db.Column(db.DateTime(timezone=True), nullable=True)  # If null, user has yet to view the results.
 
-
-    def __init__(self, search_datetime, user_id, title_number, search_type, purchase_type, amount, cart_id, transaction_id):
+    def __init__(self,
+                 search_datetime,
+                 user_id,
+                 title_number,
+                 search_type,
+                 purchase_type,
+                 amount,
+                 cart_id,
+                 transaction_id,
+                 viewed_datetime
+                 ):
         self.search_datetime = search_datetime
         self.user_id = user_id
         self.title_number = title_number
@@ -57,6 +66,8 @@ class UserSearchAndResults(db.Model):  # type: ignore
         self.purchase_type = purchase_type
         self.amount = amount
         self.cart_id = cart_id
+        self.transaction_id = transaction_id
+        self.viewed_datetime = viewed_datetime
 
     def __repr__(self):
         return '<transaction_id %r>' % self.transaction_id

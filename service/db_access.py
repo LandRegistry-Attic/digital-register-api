@@ -9,16 +9,17 @@ def save_user_search_details(params):
     Save user's search request details, for audit purposes.
     """
 
-    user_search_request = UserSearchAndResults\
-                            (
-                            viewed_time=params['MC_timestamp'],
-                            user_id=params['user_id'],
-                            title_number=params['MC_titleNumber'],
-                            search_type=params['MC_searchType'],
-                            purchase_type=params['MC_purchaseType'],
-                            amount=params['amount'],
-                            cart_id=params['cartId'],
-                            )
+    user_search_request = UserSearchAndResults(
+        search_datetime=params['MC_timestamp'],
+        user_id=params['user_id'],
+        title_number=params['MC_titleNumber'],
+        search_type=params['MC_searchType'],
+        purchase_type=params['MC_purchaseType'],
+        amount=params['amount'],
+        cart_id=params['cartId'],
+        transaction_id=None,
+        viewed_datetime=None,
+    )
 
     db.session.add(user_search_request)
     db.session.commit()
@@ -29,7 +30,7 @@ def get_user_view(user_id, timestamp):
     Get user's view details, after payment.
     """
 
-    view = UserSearchAndResults.query.filter_by(user_id=user_id, viewed_time=timestamp).first()
+    view = UserSearchAndResults.query.filter_by(user_id=user_id, viewed_datetime=timestamp).first()
     return view
 
 

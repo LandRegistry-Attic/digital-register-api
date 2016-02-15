@@ -125,6 +125,7 @@ def save_search_request():
 
     return "ok", 200
 
+
 @app.route('/get_user_view<username><timestamp>', methods=['GET'])
 def get_user_view(username, timestamp):
     result = db_access.get_user_view(username, timestamp)
