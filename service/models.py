@@ -11,7 +11,7 @@ class TitleRegisterData(db.Model):  # type: ignore
     official_copy_data = db.Column(JSON)
     is_deleted = db.Column(db.Boolean, default=False, nullable=False)
     last_modified = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now(), nullable=False)
-    lr_uprns = db.Column(ARRAY(db.String), default=[], nullable=False)
+    lr_uprns = db.Column(ARRAY(db.String), default=[], nullable=True)
 
 
 Index('idx_last_modified_and_title_number', TitleRegisterData.last_modified,
