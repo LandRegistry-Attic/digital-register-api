@@ -5,6 +5,7 @@ from service import db
 from service.models import TitleRegisterData, UprnMapping, UserSearchAndResults
 from datetime import datetime
 
+
 def save_user_search_details(params):
     """
     Save user's search request details, for audit purposes.
@@ -45,7 +46,7 @@ def user_can_view(user_id, title_number):
     """
 
     # Get only those records (per user/title) for which 'viewed_datetime' is not set.
-    kwargs = dict(user_id=user_id, title_number=title_number, viewed_datetime=None)
+    kwargs = {"user_id": user_id, "title_number": title_number, "viewed_datetime": None}
     view = UserSearchAndResults.query.filter_by(**kwargs).first()
 
     # 'viewed_datetime' tracks "once-only" usage.

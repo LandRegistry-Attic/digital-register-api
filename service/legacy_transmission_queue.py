@@ -6,15 +6,17 @@ from typing import List                                         # type: ignore
 
 logger = logging.getLogger(__name__)
 
+
 user_search_data_columns = ['SEARCH_DATETIME',
+                            'LRO_TRANS_REF',
                             'USER_ID',
-                            'TITLE_NUMBER',
+                            'VIEWED_DATETIME',
                             'SEARCH_TYPE',
                             'PURCHASE_TYPE',
                             'AMOUNT',
                             'CART_ID',
-                            'LRO_TRANS_REF',
-                            'VIEWED_DATETIME']
+                            'TITLE_NUMBER',
+                            ]
 
 OUTGOING_QUEUE = QUEUE_DICT['OUTGOING_QUEUE']
 OUTGOING_QUEUE_HOSTNAME = QUEUE_DICT['OUTGOING_QUEUE_HOSTNAME']
