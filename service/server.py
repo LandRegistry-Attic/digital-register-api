@@ -121,15 +121,16 @@ def get_titles_for_address(address):
 def save_search_request():
     # N.B.: "request.form" is a 'multidict', so need to flatten it first; assume single value per key.
     form_dict = request.form.to_dict()
-    db_access.save_user_search_details(form_dict)
+    cart_id = db_access.save_user_search_details(form_dict)
 
-    return "ok", 200
+    return cart_id, 200
 
 
-@app.route('/get_user_view<username><timestamp>', methods=['GET'])
-def get_user_view(username, timestamp):
-    result = db_access.get_user_view(username, timestamp)
-    return result
+@app.route('/user_can_view/<username>/<title_number>', methods=['GET'])
+def user_can_view(username, title_number):
+    result = db_access.user_can_view(username, title_number)
+
+    return result, 200 if result is True else result, 403
 
 
 def _hit_postgresql_with_sample_query():

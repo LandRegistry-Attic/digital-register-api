@@ -71,3 +71,6 @@ class UserSearchAndResults(db.Model):  # type: ignore
 
     def __repr__(self):
         return '<transaction_id %r>' % self.transaction_id
+
+
+Index('idx_title_number', UserSearchAndResults.title_number)
