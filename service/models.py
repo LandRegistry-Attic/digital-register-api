@@ -45,7 +45,7 @@ class UserSearchAndResults(db.Model):  # type: ignore
 
     # Post-payment items: these (or the like) are also held in the 'transaction_data' DB.
     # TODO: Ideally they should be fetched from there instead, via the 'search_datetime' key.
-    transaction_id = db.Column(db.String(30), nullable=True)                # Reconciliation: 'transId' from Worldpay.
+    lro_trans_ref = db.Column(db.String(30), nullable=True)                # Reconciliation: 'transId' from Worldpay.
     viewed_datetime = db.Column(db.DateTime(timezone=True), nullable=True)  # If null, user has yet to view the results.
 
     def __init__(self,
@@ -56,7 +56,7 @@ class UserSearchAndResults(db.Model):  # type: ignore
                  purchase_type,
                  amount,
                  cart_id,
-                 transaction_id,
+                 lro_trans_ref,
                  viewed_datetime
                  ):
         self.search_datetime = search_datetime
@@ -66,11 +66,12 @@ class UserSearchAndResults(db.Model):  # type: ignore
         self.purchase_type = purchase_type
         self.amount = amount
         self.cart_id = cart_id
-        self.transaction_id = transaction_id
+
+        self.lro_trans_ref = lro_trans_ref
         self.viewed_datetime = viewed_datetime
 
     def __repr__(self):
-        return '<transaction_id %r>' % self.transaction_id
+        return '<lro_trans_ref %r>' % self.lro_trans_ref
 
 
 Index('idx_title_number', UserSearchAndResults.title_number)

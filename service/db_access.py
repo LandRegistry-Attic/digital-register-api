@@ -27,7 +27,7 @@ def save_user_search_details(params):
         purchase_type=params['MC_purchaseType'],
         amount=params['amount'],
         cart_id=cart_id,
-        transaction_id=None,
+        lro_trans_ref=None,
         viewed_datetime=None,
     )
 
