@@ -42,10 +42,10 @@ class TestCreateSearchMessage:
         created_message = legacy_transmission_queue.create_user_search_message(FakeReturnNoSearchRowFound)
         assert created_message == {}
 
-    def test_message_is_published_when_created_message_is_not_empty(self):
+    def integration_test_message_is_published_when_created_message_is_not_empty(self):
         sent_message = legacy_transmission_queue.send_legacy_transmission(FakeSearchTransmissionJSON)
         assert sent_message is True
 
-    def test_message_is_not_published_when_created_message_is_empty(self):
+    def integration_test_message_is_not_published_when_created_message_is_empty(self):
         sent_message = legacy_transmission_queue.send_legacy_transmission(FakeEmptySearchTransmissionJSON)
         assert sent_message is False
