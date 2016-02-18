@@ -18,24 +18,29 @@ user_search_data_columns = ['SEARCH_DATETIME',
                             'TITLE_NUMBER',
                             ]
 
-OUTGOING_QUEUE = QUEUE_DICT['OUTGOING_QUEUE']
-OUTGOING_QUEUE_HOSTNAME = QUEUE_DICT['OUTGOING_QUEUE_HOSTNAME']
 
-outgoing_exchange = Exchange("legacy_transmission", type='direct')
+def create_legacy_queue_connection():
+    OUTGOING_QUEUE = QUEUE_DICT['OUTGOING_QUEUE']
+    OUTGOING_QUEUE_HOSTNAME = QUEUE_DICT['OUTGOING_QUEUE_HOSTNAME']
 
-queue = Queue(OUTGOING_QUEUE, outgoing_exchange, routing_key="legacy_transmission")
+    outgoing_exchange = Exchange("legacy_transmission", type='direct')
 
-connection = BrokerConnection(hostname=OUTGOING_QUEUE_HOSTNAME,
-                              userid=QUEUE_DICT['OUTGOING_QUEUE_USERID'],
-                              password=QUEUE_DICT['OUTGOING_QUEUE_PASSWORD'],
-                              virtual_host="/")
-channel = connection.channel()
+    queue = Queue(OUTGOING_QUEUE, outgoing_exchange, routing_key="legacy_transmission")
 
-producer = Producer(channel, exchange=outgoing_exchange, routing_key="legacy_transmission")
+    connection = BrokerConnection(hostname=OUTGOING_QUEUE_HOSTNAME,
+                                  userid=QUEUE_DICT['OUTGOING_QUEUE_USERID'],
+                                  password=QUEUE_DICT['OUTGOING_QUEUE_PASSWORD'],
+                                  virtual_host="/")
+    channel = connection.channel()
+
+    producer = Producer(channel, exchange=outgoing_exchange, routing_key="legacy_transmission")
+
+    return producer
 
 
 # Publishes the user_search on the legacy_transmission_queue
 def send_legacy_transmission(user_search_result: List[str]):
+    producer = create_legacy_queue_connection()
     user_search_transmission = create_user_search_message(user_search_result)
     if user_search_transmission:
         producer.publish(user_search_transmission, serializer="json", compression="zlib")
