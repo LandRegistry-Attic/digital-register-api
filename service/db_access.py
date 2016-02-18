@@ -1,7 +1,63 @@
+import hashlib
 from sqlalchemy import false                                 # type: ignore
 from sqlalchemy.orm.strategy_options import load_only, Load  # type: ignore
+from service import db
+from service.models import TitleRegisterData, UprnMapping, UserSearchAndResults
+from datetime import datetime
 
-from service.models import TitleRegisterData, UprnMapping
+
+def save_user_search_details(params):
+    """
+    Save user's search request details, for audit purposes.
+
+    Return cart id. as a hash with "block_size" of 64.
+    """
+    uf = 'utf-8'
+    hash = hashlib.sha1()
+    hash.update(bytes(params['MC_userId'], uf))
+    hash.update(bytes(params['MC_timestamp'], uf))
+
+    # Convert byte hash to string, for DB usage (max. len 64 for DB2).
+    cart_id = hash.hexdigest()[:64]
+
+    user_search_request = UserSearchAndResults(
+        search_datetime=params['MC_timestamp'],
+        user_id=params['MC_userId'],
+        title_number=params['MC_titleNumber'],
+        search_type=params['MC_searchType'],
+        purchase_type=params['MC_purchaseType'],
+        amount=params['amount'],
+        cart_id=cart_id,
+        lro_trans_ref=None,
+        viewed_datetime=None,
+    )
+
+    db.session.add(user_search_request)
+    db.session.commit()
+
+    return cart_id
+
+
+def user_can_view(user_id, title_number):
+    """
+    Get user's view details, after payment.
+
+    Returns True/False according to whether query gives a result or not.
+    """
+
+    # Get only those records (per user/title) for which 'viewed_datetime' is not set.
+    kwargs = {"user_id": user_id, "title_number": title_number, "viewed_datetime": None}
+    view = UserSearchAndResults.query.filter_by(**kwargs).first()
+
+    # 'viewed_datetime' tracks "once-only" usage.
+    if view:
+        if view.viewed_datetime is None:
+
+            # Update row.
+            view.viewed_datetime = _get_time()
+            db.session.commit()
+
+    return view is not None
 
 
 def get_title_register(title_number):
@@ -77,3 +133,9 @@ def get_mapped_lruprn(address_base_uprn):
         ).first()
 
         return result
+
+
+def _get_time():
+    # Postgres datetime format is YYYY-MM-DD MM:HH:SS.mm
+    _now = datetime.now()
+    return _now.strftime("%Y-%m-%d %H:%M:%S.%f")

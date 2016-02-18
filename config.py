@@ -18,6 +18,13 @@ postcode_search_doc_type = os.environ['POSTCODE_SEARCH_DOC_TYPE']
 address_search_doc_type = os.environ['ADDRESS_SEARCH_DOC_TYPE']
 address_search_api_url = os.environ['ADDRESS_SEARCH_API']
 
+QUEUE_DICT = {
+    'OUTGOING_QUEUE': os.environ.get('OUTGOING_QUEUE', 'legacy_transmission_queue'),
+    'OUTGOING_QUEUE_HOSTNAME': os.environ.get('OUTGOING_QUEUE_HOSTNAME', 'localhost'),
+    'OUTGOING_QUEUE_USERID': os.environ.get('OUTGOING_QUEUE_USERID', "guest"),
+    'OUTGOING_QUEUE_PASSWORD': os.environ.get('OUTGOING_QUEUE_PASSWORD', "guest"),
+}
+
 CONFIG_DICT = {
     'DEBUG': False,
     'LOGGING': True,
