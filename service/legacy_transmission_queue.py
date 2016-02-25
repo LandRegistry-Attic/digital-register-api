@@ -3,17 +3,17 @@ import json                                                     # type: ignore
 from kombu import BrokerConnection, Exchange, Queue, Producer   # type: ignore
 from config import QUEUE_DICT                                   # type: ignore
 from typing import Dict                                         # type: ignore
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-
+# Derived from kombu /examples/complete_send_manual.py
 def create_legacy_queue_connection():
     OUTGOING_QUEUE = QUEUE_DICT['OUTGOING_QUEUE']
     OUTGOING_QUEUE_HOSTNAME = QUEUE_DICT['OUTGOING_QUEUE_HOSTNAME']
 
     outgoing_exchange = Exchange("legacy_transmission", type='direct')
 
+    # Queue instance is not explicitly referenced; linkage is via exchange and routing key.
     queue = Queue(OUTGOING_QUEUE, outgoing_exchange, routing_key="legacy_transmission")
 
     connection = BrokerConnection(hostname=OUTGOING_QUEUE_HOSTNAME,
