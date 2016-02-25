@@ -3,8 +3,14 @@
 #   'source environment.sh; python tests/integration_tests.py'
 
 import requests
+from datetime import datetime
 
-test_data = {"MC_timestamp": "2016-01-26 13:00:30.005449",
+# Postgres datetime format is YYYY-MM-DD MM:HH:SS.mm
+_now = datetime.now()
+MC_timestamp = _now.strftime("%Y-%m-%d %H:%M:%S.%f")
+
+
+test_data = {"MC_timestamp": MC_timestamp,
              "MC_userId": "Test User",
              "MC_titleNumber": "GR12345",
              "MC_searchType": "D",

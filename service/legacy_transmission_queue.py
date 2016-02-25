@@ -6,28 +6,30 @@ from typing import Dict                                         # type: ignore
 
 logger = logging.getLogger(__name__)
 
-# Derived from kombu /examples/complete_send_manual.py
+# Loosely derived from kombu /examples/complete_send_manual.py
 def create_legacy_queue_connection():
+
     OUTGOING_QUEUE = QUEUE_DICT['OUTGOING_QUEUE']
     OUTGOING_QUEUE_HOSTNAME = QUEUE_DICT['OUTGOING_QUEUE_HOSTNAME']
 
     outgoing_exchange = Exchange("legacy_transmission", type='direct')
 
-    # Queue instance is not explicitly referenced; linkage is via exchange and routing key.
     queue = Queue(OUTGOING_QUEUE, outgoing_exchange, routing_key="legacy_transmission")
 
     connection = BrokerConnection(hostname=OUTGOING_QUEUE_HOSTNAME,
                                   userid=QUEUE_DICT['OUTGOING_QUEUE_USERID'],
                                   password=QUEUE_DICT['OUTGOING_QUEUE_PASSWORD'],
                                   virtual_host="/")
-    channel = connection.channel()
 
-    producer = Producer(channel, exchange=outgoing_exchange, routing_key="legacy_transmission")
+    # Queue must be declared, otherwise messages are silently sent to a 'black hole'!
+    bound_queue = queue(connection)
+    bound_queue.declare()
+
+    producer = Producer(connection, exchange=outgoing_exchange, routing_key="legacy_transmission")
 
     return producer
 
 
-# Publishes the user_search on the legacy_transmission_queue
 def send_legacy_transmission(user_search_result: Dict):
     producer = create_legacy_queue_connection()
     user_search_transmission = create_user_search_message(user_search_result)
@@ -40,7 +42,7 @@ def send_legacy_transmission(user_search_result: Dict):
 
 def create_user_search_message(user_search_result: Dict):
 
-    # Prepare for serialisation: DB column names are upper-case and values must be sent as strings.
+    # Prepare for serialisation: DB2 column names are upper-case and values must be sent as strings.
     user_search_transmission = {k.upper(): str(v) for k, v in user_search_result.items()}
 
     # Add the relevant event id.

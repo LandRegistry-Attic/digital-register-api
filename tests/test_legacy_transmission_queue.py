@@ -51,3 +51,11 @@ class TestCreateSearchMessage:
     def integration_test_message_is_not_published_when_created_message_is_empty(self):
         sent_message = legacy_transmission_queue.send_legacy_transmission(FakeEmptySearchTransmissionDict)
         assert sent_message is False
+
+
+if __name__ == '__main__':
+
+    test = TestCreateSearchMessage()
+    # import pdb; pdb.set_trace()
+
+    test.integration_test_message_is_published_when_created_message_is_not_empty()
