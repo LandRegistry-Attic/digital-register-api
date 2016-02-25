@@ -1,7 +1,8 @@
 import hashlib
+import json
 from sqlalchemy import false                                 # type: ignore
 from sqlalchemy.orm.strategy_options import load_only, Load  # type: ignore
-from service import db
+from service import db, legacy_transmission_queue
 from service.models import TitleRegisterData, UprnMapping, UserSearchAndResults
 from datetime import datetime
 
@@ -14,8 +15,9 @@ def save_user_search_details(params):
     """
     uf = 'utf-8'
     hash = hashlib.sha1()
-    hash.update(bytes(params['MC_userId'], uf))
-    hash.update(bytes(params['MC_timestamp'], uf))
+    hash.update(bytes(params['MC_titleNumber'], uf))
+    hash.update(bytes(params['last_changed_datestring'], uf))
+    hash.update(bytes(params['last_changed_timestring'], uf))
 
     # Convert byte hash to string, for DB usage (max. len 64 for DB2).
     cart_id = hash.hexdigest()[:64]
@@ -32,8 +34,14 @@ def save_user_search_details(params):
         viewed_datetime=None,
     )
 
+    # Insert to DB.
     db.session.add(user_search_request)
     db.session.commit()
+
+    # Put message on queue.
+    kwargs = user_search_request.get_dict()
+    legacy_transmission_queue.send_legacy_transmission(kwargs)
+
 
     return cart_id
 
@@ -50,12 +58,11 @@ def user_can_view(user_id, title_number):
     view = UserSearchAndResults.query.filter_by(**kwargs).first()
 
     # 'viewed_datetime' tracks "once-only" usage.
-    if view:
-        if view.viewed_datetime is None:
+    if view and view.viewed_datetime is None:
 
-            # Update row.
-            view.viewed_datetime = _get_time()
-            db.session.commit()
+        # Update row.
+        view.viewed_datetime = _get_time()
+        db.session.commit()
 
     return view is not None
 

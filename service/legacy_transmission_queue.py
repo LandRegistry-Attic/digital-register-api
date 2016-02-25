@@ -2,21 +2,10 @@ import logging                                                  # type: ignore
 import json                                                     # type: ignore
 from kombu import BrokerConnection, Exchange, Queue, Producer   # type: ignore
 from config import QUEUE_DICT                                   # type: ignore
-from typing import List                                         # type: ignore
+from typing import Dict                                         # type: ignore
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
-
-
-user_search_data_columns = ['SEARCH_DATETIME',
-                            'LRO_TRANS_REF',
-                            'USER_ID',
-                            'VIEWED_DATETIME',
-                            'SEARCH_TYPE',
-                            'PURCHASE_TYPE',
-                            'AMOUNT',
-                            'CART_ID',
-                            'TITLE_NUMBER',
-                            ]
 
 
 def create_legacy_queue_connection():
@@ -39,7 +28,7 @@ def create_legacy_queue_connection():
 
 
 # Publishes the user_search on the legacy_transmission_queue
-def send_legacy_transmission(user_search_result: List[str]):
+def send_legacy_transmission(user_search_result: Dict):
     producer = create_legacy_queue_connection()
     user_search_transmission = create_user_search_message(user_search_result)
     if user_search_transmission:
@@ -49,16 +38,13 @@ def send_legacy_transmission(user_search_result: List[str]):
         return False
 
 
-def create_user_search_message(user_search_result):
-    if user_search_result:
-        user_search_result = [str(i) for i in user_search_result]
-        # This creates a new list by zipping the results and the column names together
-        user_search_result = list(zip(user_search_data_columns, user_search_result))
-        # This adds the event id for user_search
-        user_search_result.append(('EVENT_ID', 'user_search'))
-        # Convert into json format for the use as the message
-        user_search_transmission = json.dumps(dict(user_search_result))
-    else:
-        user_search_transmission = {}
+def create_user_search_message(user_search_result: Dict):
 
-    return user_search_transmission
+    # Prepare for serialisation.
+    user_search_transmission = {k.upper(): str(v) for k, v in user_search_result.items()}
+
+    # Add the relevant event id.
+    if user_search_transmission:
+        user_search_transmission['EVENT_ID'] = 'user_search'
+
+    return json.dumps(user_search_transmission)
