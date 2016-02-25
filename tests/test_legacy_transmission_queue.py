@@ -1,20 +1,19 @@
 import json
 from decimal import Decimal
-from datetime import datetime, date, time
+from datetime import datetime
 from service import legacy_transmission_queue
 
 
 FakeReturnSearchRowFound = {"search_datetime": datetime(2016, 1, 26, 13, 0, 30, 5449),
-                              "lro_trans_ref": "1234",
-                              "user_id": "Test User",
-                              "viewed_datetime": datetime(2015, 12, 1, 14, 34, 14, 362556),
-                              "search_type": "D",
-                              "purchase_type": "drvSummaryView",
-                              "amount": Decimal('2'),
-                              "cart_id": "374f501f4567",
-                              "title_number": "GR12345",
-                              "event_id": "Search"
-                              }
+                            "user_id": "Test User",
+                            "title_number": "GR12345",
+                            "search_type": "D",
+                            "purchase_type": "drvSummaryView",
+                            "amount": Decimal('2'),
+                            "cart_id": "374f501f4567",
+                            "lro_trans_ref": None,
+                            "viewed_datetime": None,
+                           }
 
 FakeReturnNoSearchRowFound = {}
 

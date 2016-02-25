@@ -1,5 +1,4 @@
 import hashlib
-import json
 from sqlalchemy import false                                 # type: ignore
 from sqlalchemy.orm.strategy_options import load_only, Load  # type: ignore
 from service import db, legacy_transmission_queue
@@ -19,8 +18,9 @@ def save_user_search_details(params):
     hash.update(bytes(params['last_changed_datestring'], uf))
     hash.update(bytes(params['last_changed_timestring'], uf))
 
-    # Convert byte hash to string, for DB usage (max. len 64 for DB2).
-    cart_id = hash.hexdigest()[:64]
+    # Convert byte hash to string, for DB usage
+    # Max. length of corresponding LRO_SESSION_ID is 64 for DB2 but we don't care much about that at present ;-)
+    cart_id = hash.hexdigest()[:30]
 
     user_search_request = UserSearchAndResults(
         search_datetime=params['MC_timestamp'],

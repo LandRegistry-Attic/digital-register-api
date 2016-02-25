@@ -40,7 +40,7 @@ def send_legacy_transmission(user_search_result: Dict):
 
 def create_user_search_message(user_search_result: Dict):
 
-    # Prepare for serialisation.
+    # Prepare for serialisation: DB column names are upper-case and values must be sent as strings.
     user_search_transmission = {k.upper(): str(v) for k, v in user_search_result.items()}
 
     # Add the relevant event id.
