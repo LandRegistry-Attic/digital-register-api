@@ -18,7 +18,7 @@ def save_user_search_details(params):
     hash.update(bytes(params['MC_timestamp'], uf))
 
     # Convert byte hash to string, for DB usage (max. len 64 for DB2).
-    cart_id = hash.hexdigest()[:64]
+    cart_id = hash.hexdigest()[:30]
 
     user_search_request = UserSearchAndResults(
         search_datetime=params['MC_timestamp'],
@@ -28,8 +28,8 @@ def save_user_search_details(params):
         purchase_type=params['MC_purchaseType'],
         amount=params['amount'],
         cart_id=cart_id,
-        lro_trans_ref=None,
         viewed_datetime=None,
+        lro_trans_ref=None,
     )
 
     db.session.add(user_search_request)

@@ -21,7 +21,7 @@ def upgrade():
     sa.Column('user_id', sa.String(length=20), nullable=False),
     sa.Column('title_number', sa.String(length=20), nullable=False),
     sa.Column('search_type', sa.String(length=20), nullable=False),
-    sa.Column('purchase_type', sa.String(length=1), nullable=False),
+    sa.Column('purchase_type', sa.String(length=20), nullable=False),
     sa.Column('amount', sa.String(length=10), nullable=False),
     sa.Column('cart_id', sa.String(length=30), nullable=True),
     sa.Column('transaction_id', sa.String(length=30), nullable=True),

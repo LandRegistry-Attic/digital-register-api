@@ -39,7 +39,7 @@ class UserSearchAndResults(db.Model):  # type: ignore
     user_id = db.Column(db.String(20), nullable=False, primary_key=True)
     title_number = db.Column(db.String(20), nullable=False)
     search_type = db.Column(db.String(20), nullable=False)
-    purchase_type = db.Column(db.String(1), nullable=False)
+    purchase_type = db.Column(db.String(20), nullable=False)
     amount = db.Column(db.String(10), nullable=False)
     cart_id = db.Column(db.String(30), nullable=True)
 
