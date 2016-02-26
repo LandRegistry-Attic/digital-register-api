@@ -6,6 +6,9 @@ from typing import Dict                                         # type: ignore
 
 logger = logging.getLogger(__name__)
 
+
+USER_SEARCH_INSERT = 2
+
 # Loosely derived from kombu /examples/complete_send_manual.py
 def create_legacy_queue_connection():
 
@@ -47,6 +50,6 @@ def create_user_search_message(user_search_result: Dict):
 
     # Add the relevant event id.
     if user_search_transmission:
-        user_search_transmission['EVENT_ID'] = 'user_search'
+        user_search_transmission['EVENT_ID'] = USER_SEARCH_INSERT
 
     return json.dumps(user_search_transmission)
