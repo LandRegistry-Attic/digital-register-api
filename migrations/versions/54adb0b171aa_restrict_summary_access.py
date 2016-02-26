@@ -25,7 +25,6 @@ def upgrade():
     sa.Column('purchase_type', sa.String(length=20), nullable=False),
     sa.Column('amount', sa.String(length=10), nullable=False),
     sa.Column('cart_id', sa.String(length=30), nullable=True),
-    sa.Column('transaction_id', sa.String(length=30), nullable=True),
     sa.Column('viewed_datetime', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('search_datetime', 'user_id')
     )
