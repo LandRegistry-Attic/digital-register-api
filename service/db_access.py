@@ -42,7 +42,6 @@ def save_user_search_details(params):
     kwargs = user_search_request.get_dict()
     legacy_transmission_queue.send_legacy_transmission(kwargs)
 
-
     return cart_id
 
 

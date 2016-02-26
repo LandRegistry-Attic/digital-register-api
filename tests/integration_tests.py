@@ -19,8 +19,7 @@ test_data = {"MC_timestamp": MC_timestamp,
              "cart_id": "374f501f4567",
              "last_changed_datestring": "12 Jul 2014",
              "last_changed_timestring": "11:04:32",
-            }
-
+             }
 
 
 REGISTER_TITLE_API_URL = 'http://172.16.42.43:8004'
