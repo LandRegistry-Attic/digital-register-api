@@ -122,7 +122,6 @@ def save_search_request():
     # N.B.: "request.form" is a 'multidict', so need to flatten it first; assume single value per key.
     form_dict = request.form.to_dict()
     cart_id = db_access.save_user_search_details(form_dict)
-
     return cart_id, 200
 
 
