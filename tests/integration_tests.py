@@ -24,6 +24,9 @@ test_data = {"MC_timestamp": MC_timestamp,
 
 REGISTER_TITLE_API_URL = 'http://172.16.42.43:8004'
 
-response = requests.post('{}/save_search_request'.format(REGISTER_TITLE_API_URL), data=test_data)
 
-print(response)
+# added a method so that unit testing doesn't run this automatically and fail it when nothing is running
+def integration_test():
+    response = requests.post('{}/save_search_request'.format(REGISTER_TITLE_API_URL), data=test_data)
+
+    print(response)

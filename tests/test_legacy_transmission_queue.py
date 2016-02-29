@@ -37,7 +37,7 @@ class TestCreateSearchMessage:
     def test_message_is_created_when_db_row_is_returned(self):
         created_message = legacy_transmission_queue.create_user_search_message(FakeReturnSearchRowFound)  # type: ignore
         created_message = json.loads(created_message)
-        assert created_message['TITLE_NUMBER'] == FakeSearchTransmissionDict['TITLE_NUMBER']
+        assert created_message['title_number'] == FakeSearchTransmissionDict['TITLE_NUMBER']
 
     def test_message_is_not_created_when_no_row_returned(self):
         created_message = legacy_transmission_queue.create_user_search_message(FakeReturnNoSearchRowFound)  # type: ignore
