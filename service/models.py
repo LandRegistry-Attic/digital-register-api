@@ -81,3 +81,12 @@ class UserSearchAndResults(db.Model):  # type: ignore
 
 
 Index('idx_title_number', UserSearchAndResults.title_number)
+
+
+class Validation(db.Model):  # type: ignore
+    """ Store of price etc., for anti-fraud purposes """
+
+    __tablename__ = 'Validation'
+    price = db.Column(db.Integer, nullable=False, primary_key=True)
+    product = db.Column(db.String(20), default="drvSummary")        # purchase_type
+
