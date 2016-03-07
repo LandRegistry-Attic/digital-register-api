@@ -47,6 +47,7 @@ class UserSearchAndResults(db.Model):  # type: ignore
     # TODO: Ideally they should be fetched from there instead, via the 'search_datetime' key.
     lro_trans_ref = db.Column(db.String(30), nullable=True)                # Reconciliation: 'transId' from Worldpay.
     viewed_datetime = db.Column(db.DateTime(timezone=True), nullable=True)  # If null, user has yet to view the results.
+    valid = db.Column(db.Boolean, default=False)
 
     def __init__(self,
                  search_datetime,
@@ -57,7 +58,8 @@ class UserSearchAndResults(db.Model):  # type: ignore
                  amount,
                  cart_id,
                  lro_trans_ref,
-                 viewed_datetime
+                 viewed_datetime,
+                 valid
                  ):
         self.search_datetime = search_datetime
         self.user_id = user_id
@@ -69,6 +71,7 @@ class UserSearchAndResults(db.Model):  # type: ignore
 
         self.lro_trans_ref = lro_trans_ref
         self.viewed_datetime = viewed_datetime
+        self.valid = valid
 
     # This is for serialisation purposes; it returns the arguments used and their values as a dict.
     # Note that __dict__ only works well in this case if no other local variables are defined.
@@ -87,6 +90,6 @@ class Validation(db.Model):  # type: ignore
     """ Store of price etc., for anti-fraud purposes """
 
     __tablename__ = 'Validation'
-    price = db.Column(db.Integer, nullable=False, primary_key=True)
+    price = db.Column(db.Integer, nullable=False, default=3.0, primary_key=True)
     product = db.Column(db.String(20), default="drvSummary")        # purchase_type
 
