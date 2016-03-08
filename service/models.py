@@ -1,6 +1,5 @@
 from sqlalchemy.dialects.postgresql import JSON, ARRAY  # type: ignore
 from sqlalchemy import Index                     # type: ignore
-
 from service import db
 
 # N.B.: 'Index' is only used if *additional* index required!
