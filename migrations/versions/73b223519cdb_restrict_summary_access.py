@@ -26,6 +26,7 @@ def upgrade():
     sa.Column('cart_id', sa.String(length=30), nullable=True),
     sa.Column('lro_trans_ref', sa.String(length=30), nullable=True),
     sa.Column('viewed_datetime', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('valid', sa.Boolean, default=False),
     sa.PrimaryKeyConstraint('search_datetime', 'user_id')
     )
     op.create_index('idx_title_number', 'user_search_and_results', ['title_number'], unique=False)

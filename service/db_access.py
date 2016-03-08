@@ -11,6 +11,7 @@ def save_user_search_details(params):
     Save user's search request details, for audit purposes.
 
     Return cart id. as a hash with "block_size" of 64.
+    :param params:
     """
     uf = 'utf-8'
     hash = hashlib.sha1()
@@ -32,6 +33,7 @@ def save_user_search_details(params):
         cart_id=cart_id,
         viewed_datetime=None,
         lro_trans_ref=None,
+        valid=False,
     )
 
     # Insert to DB.
@@ -50,6 +52,8 @@ def user_can_view(user_id, title_number):
     Get user's view details, after payment.
 
     Returns True/False according to whether query gives a result or not.
+    :param user_id:
+    :param title_number:
     """
 
     # Get only those records (per user/title) for which 'viewed_datetime' is not set.
