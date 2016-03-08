@@ -92,4 +92,3 @@ class Validation(db.Model):  # type: ignore
     __tablename__ = 'validation'
     price = db.Column(db.Integer, nullable=False, default=300, primary_key=True)
     product = db.Column(db.String(20), default="drvSummary")        # purchase_type
-
