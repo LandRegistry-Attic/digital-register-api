@@ -29,7 +29,8 @@ def save_user_search_details(params):
         title_number=params['MC_titleNumber'],
         search_type=params['MC_searchType'],
         purchase_type=params['MC_purchaseType'],
-        amount=params['amount'],
+        # needs to be in pence
+        amount=int(float(params['amount']) * 100),
         cart_id=cart_id,
         viewed_datetime=None,
         lro_trans_ref=None,
@@ -41,8 +42,8 @@ def save_user_search_details(params):
     db.session.commit()
 
     # Put message on queue.
-    kwargs = user_search_request.get_dict()
-    legacy_transmission_queue.send_legacy_transmission(kwargs)
+    prepped_message = _create_queue_message(params, cart_id)
+    legacy_transmission_queue.send_legacy_transmission(prepped_message)
 
     return cart_id
 
@@ -149,3 +150,22 @@ def _get_time():
     # Postgres datetime format is YYYY-MM-DD MM:HH:SS.mm
     _now = datetime.now()
     return _now.strftime("%Y-%m-%d %H:%M:%S.%f")
+
+
+def _create_queue_message(params, cart_id):
+    """
+    Using parameters fed into the original method we need to create a json version with different keys
+    :param params:
+    :param cart_id:
+    :return:
+    """
+    return {'search_datetime': params['MC_timestamp'],
+            'user_id': params['MC_userId'],
+            'title_number': params['MC_titleNumber'],
+            'search_type': params['MC_searchType'],
+            'purchase_type': params['MC_purchaseType'],
+            # needs to be in pence
+            'amount': int(float(params['amount']) * 100),
+            'cart_id': cart_id,
+            'viewed_datetime': None,
+            'lro_trans_ref': None}
