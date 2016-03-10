@@ -1,8 +1,8 @@
 import hashlib
 from sqlalchemy import false                                 # type: ignore
-from sqlalchemy.orm.strategy_options import load_only, Load  # type: ignore
+from sqlalchemy.orm.strategy_options import Load             # type: ignore
 from service import db, legacy_transmission_queue
-from service.models import TitleRegisterData, UprnMapping, UserSearchAndResults
+from service.models import TitleRegisterData, UprnMapping, UserSearchAndResults, Validation
 from datetime import datetime
 
 
@@ -68,6 +68,11 @@ def user_can_view(user_id, title_number):
         db.session.commit()
 
     return view is not None
+
+
+def get_price(product):
+    price = Validation().query.filter_by(product=product).first()
+    return price
 
 
 def get_title_register(title_number):

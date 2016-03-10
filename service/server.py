@@ -132,6 +132,12 @@ def user_can_view(username, title_number):
     return result, 200 if result is True else result, 403
 
 
+@app.route('/get_price/<product>', methods=['GET'])
+def get_price(product):
+
+    return db_access.get_price(product)
+
+
 def _hit_postgresql_with_sample_query():
     # Hitting PostgreSQL database to see if it responds properly
     db_access.get_title_register('non-existing-title')
