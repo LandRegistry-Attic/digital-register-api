@@ -1,7 +1,79 @@
+import hashlib
 from sqlalchemy import false                                 # type: ignore
-from sqlalchemy.orm.strategy_options import load_only, Load  # type: ignore
+from sqlalchemy.orm.strategy_options import Load             # type: ignore
+from service import db, legacy_transmission_queue
+from service.models import TitleRegisterData, UprnMapping, UserSearchAndResults, Validation
+from datetime import datetime
 
-from service.models import TitleRegisterData, UprnMapping
+
+def save_user_search_details(params):
+    """
+    Save user's search request details, for audit purposes.
+
+    Return cart id. as a hash with "block_size" of 64.
+    :param params:
+    """
+    uf = 'utf-8'
+    hash = hashlib.sha1()
+    hash.update(bytes(params['MC_titleNumber'], uf))
+    hash.update(bytes(params['last_changed_datestring'], uf))
+    hash.update(bytes(params['last_changed_timestring'], uf))
+
+    # Convert byte hash to string, for DB usage
+    # Max. length of corresponding LRO_SESSION_ID is 64 for DB2 but we don't care much about that at present ;-)
+    cart_id = hash.hexdigest()[:30]
+
+    user_search_request = UserSearchAndResults(
+        search_datetime=params['MC_timestamp'],
+        user_id=params['MC_userId'],
+        title_number=params['MC_titleNumber'],
+        search_type=params['MC_searchType'],
+        purchase_type=params['MC_purchaseType'],
+        # needs to be in pence
+        amount=int(float(params['amount']) * 100),
+        cart_id=cart_id,
+        viewed_datetime=None,
+        lro_trans_ref=None,
+        valid=False,
+    )
+
+    # Insert to DB.
+    db.session.add(user_search_request)
+    db.session.commit()
+
+    # Put message on queue.
+    prepped_message = _create_queue_message(params, cart_id)
+    legacy_transmission_queue.send_legacy_transmission(prepped_message)
+
+    return cart_id
+
+
+def user_can_view(user_id, title_number):
+    """
+    Get user's view details, after payment.
+
+    Returns True/False according to whether query gives a result or not.
+    :param user_id:
+    :param title_number:
+    """
+
+    # Get only those records (per user/title) for which 'viewed_datetime' is not set.
+    kwargs = {"user_id": user_id, "title_number": title_number, "viewed_datetime": None}
+    view = UserSearchAndResults.query.filter_by(**kwargs).first()
+
+    # 'viewed_datetime' tracks "once-only" usage.
+    if view and view.viewed_datetime is None:
+
+        # Update row.
+        view.viewed_datetime = _get_time()
+        db.session.commit()
+
+    return view is not None
+
+
+def get_price(product):
+    result = Validation.query.filter_by(product=product).first()
+    return result.price
 
 
 def get_title_register(title_number):
@@ -77,3 +149,28 @@ def get_mapped_lruprn(address_base_uprn):
         ).first()
 
         return result
+
+
+def _get_time():
+    # Postgres datetime format is YYYY-MM-DD MM:HH:SS.mm
+    _now = datetime.now()
+    return _now.strftime("%Y-%m-%d %H:%M:%S.%f")
+
+
+def _create_queue_message(params, cart_id):
+    """
+    Using parameters fed into the original method we need to create a json version with different keys
+    :param params:
+    :param cart_id:
+    :return:
+    """
+    return {'search_datetime': params['MC_timestamp'],
+            'user_id': params['MC_userId'],
+            'title_number': params['MC_titleNumber'],
+            'search_type': params['MC_searchType'],
+            'purchase_type': params['MC_purchaseType'],
+            # needs to be in pence
+            'amount': int(float(params['amount']) * 100),
+            'cart_id': cart_id,
+            'viewed_datetime': None,
+            'lro_trans_ref': None}

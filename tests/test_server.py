@@ -1,9 +1,8 @@
+import json
+import mock
 from datetime import datetime
 from collections import namedtuple
-import json
 from elasticsearch_dsl.utils import AttrList
-import mock
-
 from service import app
 from service.server import db_access, es_access, api_client
 
