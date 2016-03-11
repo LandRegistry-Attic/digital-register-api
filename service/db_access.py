@@ -72,9 +72,8 @@ def user_can_view(user_id, title_number):
 
 
 def get_price(product):
-
-    price = Validation.query.filter_by(product=product).first()
-    return price
+    result = Validation.query.filter_by(product=product).first()
+    return result.price
 
 
 def get_title_register(title_number):
