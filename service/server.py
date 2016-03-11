@@ -135,7 +135,8 @@ def user_can_view(username, title_number):
 @app.route('/get_price/<product>', methods=['GET'])
 def get_price(product):
 
-    return db_access.get_price(product)
+    price = db_access.get_price(product)
+    return str(price), 200
 
 
 def _hit_postgresql_with_sample_query():
