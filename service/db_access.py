@@ -1,9 +1,10 @@
 import hashlib
+import config
 from sqlalchemy import false                                 # type: ignore
 from sqlalchemy.orm.strategy_options import Load             # type: ignore
 from service import db, legacy_transmission_queue
 from service.models import TitleRegisterData, UprnMapping, UserSearchAndResults, Validation
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def save_user_search_details(params):
@@ -52,23 +53,26 @@ def user_can_view(user_id, title_number):
     """
     Get user's view details, after payment.
 
-    Returns True/False according to whether query gives a result or not.
+    Returns True/False according to whether "viewing window" is valid or not.
     :param user_id:
     :param title_number:
     """
 
-    # Get only those records (per user/title) for which 'viewed_datetime' is not set.
-    kwargs = {"user_id": user_id, "title_number": title_number, "viewed_datetime": None}
+    status = False
+
+    # Get relevant record (only one assumed).
+    kwargs = {"user_id": user_id, "title_number": title_number}
     view = UserSearchAndResults.query.filter_by(**kwargs).first()
 
-    # 'viewed_datetime' tracks "once-only" usage.
-    if view and view.viewed_datetime is None:
+    # 'viewed_datetime' denotes initial "access time" usage; name reflects different, earlier usage.
+    if view and view.viewed_datetime:
 
-        # Update row.
-        view.viewed_datetime = _get_time()
-        db.session.commit()
+        viewing_duration = datetime.now() - view.viewed_datetime
+        view_window_time = int(config.CONFIG_DICT['VIEW_WINDOW_TIME'])
 
-    return view is not None
+        status = viewing_duration < timedelta(minutes=view_window_time)
+
+    return status
 
 
 def get_price(product):

@@ -1,4 +1,4 @@
-from flask import jsonify, Response, request  # type: ignore
+from flask import jsonify, Response, request, make_response  # type: ignore
 import json
 import logging
 import logging.config                         # type: ignore
@@ -128,8 +128,16 @@ def save_search_request():
 @app.route('/user_can_view/<username>/<title_number>', methods=['GET'])
 def user_can_view(username, title_number):
     result = db_access.user_can_view(username, title_number)
+    import pdb; pdb.set_trace()
 
-    return result, 200 if result is True else result, 403
+    return make_response(result, 200) if result is True else make_response(result, 403)
+
+
+@app.route('/get_price/<product>', methods=['GET'])
+def get_price(product):
+
+    price = db_access.get_price(product)
+    return str(price), 200
 
 
 @app.route('/get_price/<product>', methods=['GET'])
