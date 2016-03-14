@@ -1,10 +1,14 @@
 import hashlib
 import config
+import logging
 from sqlalchemy import false                                 # type: ignore
 from sqlalchemy.orm.strategy_options import Load             # type: ignore
 from service import db, legacy_transmission_queue
 from service.models import TitleRegisterData, UprnMapping, UserSearchAndResults, Validation
 from datetime import datetime, timedelta
+
+
+logger = logging.getLogger(__name__)
 
 
 def save_user_search_details(params):
@@ -67,8 +71,9 @@ def user_can_view(user_id, title_number):
     # 'viewed_datetime' denotes initial "access time" usage; name reflects different, earlier usage.
     if view and view.viewed_datetime:
 
+        minutes=int(config.CONFIG_DICT['VIEW_WINDOW_TIME'])
         viewing_duration = datetime.now() - view.viewed_datetime
-        view_window_time = int(config.CONFIG_DICT['VIEW_WINDOW_TIME'])
+        view_window_time = timedelta(minutes=minutes)
 
         status = viewing_duration < timedelta(minutes=view_window_time)
 
