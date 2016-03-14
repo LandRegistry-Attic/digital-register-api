@@ -75,7 +75,7 @@ def user_can_view(user_id, title_number):
         viewing_duration = datetime.now() - view.viewed_datetime
         view_window_time = timedelta(minutes=minutes)
 
-        status = viewing_duration < timedelta(minutes=view_window_time)
+        status = viewing_duration < view_window_time
 
     return status
 

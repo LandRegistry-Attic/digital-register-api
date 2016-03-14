@@ -139,13 +139,6 @@ def get_price(product):
     return str(price), 200
 
 
-@app.route('/get_price/<product>', methods=['GET'])
-def get_price(product):
-
-    price = db_access.get_price(product)
-    return str(price), 200
-
-
 def _hit_postgresql_with_sample_query():
     # Hitting PostgreSQL database to see if it responds properly
     db_access.get_title_register('non-existing-title')
