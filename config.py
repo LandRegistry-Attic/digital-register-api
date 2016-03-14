@@ -17,6 +17,15 @@ elasticsearch_index_name = os.environ['ELASTICSEARCH_INDEX_NAME']
 postcode_search_doc_type = os.environ['POSTCODE_SEARCH_DOC_TYPE']
 address_search_doc_type = os.environ['ADDRESS_SEARCH_DOC_TYPE']
 address_search_api_url = os.environ['ADDRESS_SEARCH_API']
+nominal_price = os.getenv('NOMINAL_PRICE', 300)
+
+
+QUEUE_DICT = {
+    'OUTGOING_QUEUE': os.environ.get('OUTGOING_QUEUE', 'legacy_transmission_queue'),
+    'OUTGOING_QUEUE_HOSTNAME': os.environ.get('OUTGOING_QUEUE_HOSTNAME', 'localhost'),
+    'OUTGOING_QUEUE_USERID': os.environ.get('OUTGOING_QUEUE_USERID', "guest"),
+    'OUTGOING_QUEUE_PASSWORD': os.environ.get('OUTGOING_QUEUE_PASSWORD', "guest"),
+}
 
 CONFIG_DICT = {
     'DEBUG': False,
@@ -31,6 +40,7 @@ CONFIG_DICT = {
     'POSTCODE_SEARCH_DOC_TYPE': postcode_search_doc_type,
     'ADDRESS_SEARCH_DOC_TYPE': address_search_doc_type,
     'ADDRESS_SEARCH_API': address_search_api_url,
+    'NOMINAL_PRICE': nominal_price,
 }  # type: Dict[str, Union[bool, str, int]]
 
 settings = os.environ.get('SETTINGS')
