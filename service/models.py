@@ -34,7 +34,7 @@ class UserSearchAndResults(db.Model):  # type: ignore
 
     # As several users may be searching at the same time, we need a compound primary key.
     # Note that WebSeal prevents a user from being logged in from multiple places concurrently.
-    search_datetime = db.Column(db.DateTime(timezone=True), nullable=False, primary_key=True)
+    search_datetime = db.Column(db.DateTime(), nullable=False, primary_key=True)
     user_id = db.Column(db.String(20), nullable=False, primary_key=True)
     title_number = db.Column(db.String(20), nullable=False)
     search_type = db.Column(db.String(20), nullable=False)
@@ -45,7 +45,7 @@ class UserSearchAndResults(db.Model):  # type: ignore
     # Post-payment items: these (or the like) are also held in the 'transaction_data' DB.
     # TODO: Ideally they should be fetched from there instead, via the 'search_datetime' key.
     lro_trans_ref = db.Column(db.String(30), nullable=True)                # Reconciliation: 'transId' from Worldpay.
-    viewed_datetime = db.Column(db.DateTime(timezone=True), nullable=True)  # If null, user has yet to view the results.
+    viewed_datetime = db.Column(db.DateTime(), nullable=True)              # If null, user has yet to view the results.
     valid = db.Column(db.Boolean, default=False)
 
     def __init__(self,
