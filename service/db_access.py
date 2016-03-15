@@ -71,7 +71,7 @@ def user_can_view(user_id, title_number):
     # 'viewed_datetime' denotes initial "access time" usage; name reflects different, earlier usage.
     if view and view.viewed_datetime:
 
-        minutes=int(config.CONFIG_DICT['VIEW_WINDOW_TIME'])
+        minutes = int(config.CONFIG_DICT['VIEW_WINDOW_TIME'])
         viewing_duration = datetime.now() - view.viewed_datetime
         view_window_time = timedelta(minutes=minutes)
 
