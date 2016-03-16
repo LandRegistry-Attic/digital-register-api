@@ -1,4 +1,4 @@
-from flask import jsonify, Response, request  # type: ignore
+from flask import jsonify, Response, request, make_response  # type: ignore
 import json
 import logging
 import logging.config                         # type: ignore
@@ -10,7 +10,7 @@ INTERNAL_SERVER_ERROR_RESPONSE_BODY = json.dumps(
     {'error': 'Internal server error'}
 )
 JSON_CONTENT_TYPE = 'application/json'
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 TITLE_NOT_FOUND_RESPONSE = Response(
     json.dumps({'error': 'Title not found'}),
@@ -21,7 +21,7 @@ TITLE_NOT_FOUND_RESPONSE = Response(
 
 @app.errorhandler(Exception)
 def handleServerError(error):
-    LOGGER.error(
+    logger.error(
         'An error occurred when processing a request',
         exc_info=error
     )
@@ -127,9 +127,9 @@ def save_search_request():
 
 @app.route('/user_can_view/<username>/<title_number>', methods=['GET'])
 def user_can_view(username, title_number):
-    result = db_access.user_can_view(username, title_number)
+    result = str(db_access.user_can_view(username, title_number))
 
-    return result, 200 if result is True else result, 403
+    return make_response(result, 200) if result == 'True' else make_response(result, 403)
 
 
 @app.route('/get_price/<product>', methods=['GET'])
