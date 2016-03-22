@@ -69,7 +69,7 @@ def user_can_view(user_id, title_number):
     view = UserSearchAndResults.query.filter_by(**kwargs).first()
 
     # 'viewed_datetime' denotes initial "access time" usage; name reflects different, earlier usage.
-    if view and view.viewed_datetime:
+    if view and view.viewed_datetime and view.valid:
 
         minutes = int(config.CONFIG_DICT['VIEW_WINDOW_TIME'])
         viewing_duration = datetime.now() - view.viewed_datetime
