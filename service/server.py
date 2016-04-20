@@ -1,7 +1,6 @@
 from flask import jsonify, Response, request, make_response  # type: ignore
 import json
 import logging
-import logging.config                         # type: ignore
 import math
 
 from service import app, db_access, es_access, api_client
