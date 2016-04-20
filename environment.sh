@@ -16,3 +16,4 @@ export SEARCH_RESULTS_PER_PAGE=20
 export POSTCODE_SEARCH_DOC_TYPE=property_by_postcode_3
 export ADDRESS_SEARCH_DOC_TYPE=property_by_address
 export NOMINAL_PRICE=300
+export LOGGING_LEVEL='DEBUG'
