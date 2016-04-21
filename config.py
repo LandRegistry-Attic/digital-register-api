@@ -19,6 +19,7 @@ address_search_doc_type = os.environ['ADDRESS_SEARCH_DOC_TYPE']
 address_search_api_url = os.environ['ADDRESS_SEARCH_API']
 nominal_price = os.getenv('NOMINAL_PRICE', '300')                     # Nominal price, in pence.
 view_window_time = os.getenv('VIEW_WINDOW_TIME', '60')                # Viewing access duration, in minutes.
+logger_level = os.getenv('LOGGING_LEVEL', 'WARN')
 
 QUEUE_DICT = {
     'OUTGOING_QUEUE': os.environ.get('OUTGOING_QUEUE', 'legacy_transmission_queue'),
@@ -42,6 +43,7 @@ CONFIG_DICT = {
     'ADDRESS_SEARCH_API': address_search_api_url,
     'NOMINAL_PRICE': nominal_price,
     'VIEW_WINDOW_TIME': view_window_time,
+    'LOGGING_LEVEL': logger_level,
 }  # type: Dict[str, Union[bool, str, int]]
 
 settings = os.environ.get('SETTINGS')
