@@ -21,6 +21,8 @@
   },
   "loggers": {
     "service": {
+        "level": "INFO",
+        "handlers": []
     },
     "elasticsearch.trace": {
         "level": "WARN"
