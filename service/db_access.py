@@ -7,7 +7,6 @@ from service import db, legacy_transmission_queue
 from service.models import TitleRegisterData, UprnMapping, UserSearchAndResults, Validation
 from datetime import datetime, timedelta
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -18,6 +17,8 @@ def save_user_search_details(params):
     Return cart id. as a hash with "block_size" of 64.
     :param params:
     """
+    logger.debug('Start save_user_search_details')
+    logger.debug(params)
     uf = 'utf-8'
     hash = hashlib.sha1()
     hash.update(bytes(params['MC_titleNumber'], uf))
@@ -41,15 +42,19 @@ def save_user_search_details(params):
         lro_trans_ref=None,
         valid=False,
     )
-
+    logger.info('Sending to PostGres')
     # Insert to DB.
     db.session.add(user_search_request)
     db.session.commit()
+    logger.info('Finished sending to PostGres')
 
     # Put message on queue.
     prepped_message = _create_queue_message(params, cart_id)
+    logger.info('Sending to legacy transmission queue')
+    logger.debug(prepped_message)
     legacy_transmission_queue.send_legacy_transmission(prepped_message)
-
+    logger.info('Finished sending to transmission queue')
+    logger.debug('End save_user_search_details - returning cartId: {}'.format(cart_id))
     return cart_id
 
 
@@ -61,11 +66,12 @@ def user_can_view(user_id, title_number):
     :param user_id:
     :param title_number:
     """
-
+    logger.debug('Start user_can_view')
     status = False
 
     # Get relevant record (only one assumed).
     kwargs = {"user_id": user_id, "title_number": title_number}
+    logger.info('retreiving date and time of viewing')
     view = UserSearchAndResults.query.filter_by(**kwargs).order_by(UserSearchAndResults.viewed_datetime.desc().nullslast()).first()
 
     # 'viewed_datetime' denotes initial "access time" usage; name reflects different, earlier usage.
@@ -76,7 +82,7 @@ def user_can_view(user_id, title_number):
         view_window_time = timedelta(minutes=minutes)
 
         status = viewing_duration < view_window_time
-
+    logger.debug('End user_can_view. Returning {}'.format(status))
     return status
 
 
@@ -86,8 +92,8 @@ def get_price(product):
 
 
 def get_title_register(title_number):
-    # TODO: trust our own code to do the right thing - validate data on input instead
     if title_number:
+        logger.debug('Start get_title_register using {}'.format(title_number))
         # Will retrieve the first matching title that is not marked as deleted
         result = TitleRegisterData.query.options(
             Load(TitleRegisterData).load_only(
@@ -99,23 +105,29 @@ def get_title_register(title_number):
             TitleRegisterData.title_number == title_number,
             TitleRegisterData.is_deleted == false()
         ).first()
-
+        logger.debug('Returning result: {}'.format(result))
+        logger.debug('End get_title_register')
         return result
     else:
+        logger.debug('End get_title_register - No title number received')
         raise TypeError('Title number must not be None.')
 
 
 def get_title_registers(title_numbers):
+    logger.debug('Start get_title_registers using {}'.format(title_numbers))
     # Will retrieve matching titles that are not marked as deleted
     fields = [TitleRegisterData.title_number.name, TitleRegisterData.register_data.name,
               TitleRegisterData.geometry_data.name]
     query = TitleRegisterData.query.options(Load(TitleRegisterData).load_only(*fields))
     results = query.filter(TitleRegisterData.title_number.in_(title_numbers),
                            TitleRegisterData.is_deleted == false()).all()
+    logger.debug('Returning results: {}'.format(results))
+    logger.debug('End get_title_registers ')
     return results
 
 
 def get_official_copy_data(title_number):
+    logger.debug('Start get_official_copy_data using: {}'.format(title_number))
     result = TitleRegisterData.query.options(
         Load(TitleRegisterData).load_only(
             TitleRegisterData.title_number.name,
@@ -125,11 +137,13 @@ def get_official_copy_data(title_number):
         TitleRegisterData.title_number == title_number,
         TitleRegisterData.is_deleted == false()
     ).first()
-
+    logger.debug('Returning result: {}'.format(result))
+    logger.debug('End get_official_copy_data')
     return result
 
 
 def get_title_number_and_register_data(lr_uprn):
+    logger.debug('Start get_title_number_and_register_data using: {}'.format(lr_uprn))
     amended_lr_uprn = '{' + lr_uprn + '}'
     result = TitleRegisterData.query.options(
         Load(TitleRegisterData).load_only(
@@ -141,6 +155,8 @@ def get_title_number_and_register_data(lr_uprn):
         TitleRegisterData.lr_uprns.contains(amended_lr_uprn),
         TitleRegisterData.is_deleted == false()
     ).all()
+    logger.debug('Returning result: {}'.format(result))
+    logger.debug('End get_title_number_and_register_data')
     if result:
         return result[0]
     else:
@@ -148,16 +164,18 @@ def get_title_number_and_register_data(lr_uprn):
 
 
 def get_mapped_lruprn(address_base_uprn):
-        result = UprnMapping.query.options(
-            Load(UprnMapping).load_only(
-                UprnMapping.lr_uprn.name,
-                UprnMapping.uprn.name
-            )
-        ).filter(
-            UprnMapping.uprn == address_base_uprn
-        ).first()
-
-        return result
+    logger.debug('Start get_mapped_lruprn using {}'.format(address_base_uprn))
+    result = UprnMapping.query.options(
+        Load(UprnMapping).load_only(
+            UprnMapping.lr_uprn.name,
+            UprnMapping.uprn.name
+        )
+    ).filter(
+        UprnMapping.uprn == address_base_uprn
+    ).first()
+    logger.debug('Returning result: {}'.format(result))
+    logger.debug('End get_mapped_lruprn')
+    return result
 
 
 def _get_time():

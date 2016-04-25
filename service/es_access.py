@@ -1,23 +1,30 @@
+import logging
 from elasticsearch import Elasticsearch  # type: ignore
 from elasticsearch_dsl import Search     # type: ignore
 
 from service import app
 
+logger = logging.getLogger(__name__)
+
 
 def get_properties_for_postcode(postcode, page_size, page_number):
+    logger.debug('Start get_properties_for_postcode using {}'.format(postcode))
     search = _create_search(_get_postcode_search_doc_type())
     query = search.filter('term', postcode=postcode).sort(
         {'house_number_or_first_number': {'missing': '_last'}},
         {'address_string': {'missing': '_last'}}
     )
     start_index, end_index = _get_start_and_end_indexes(page_number, page_size)
+    logger.debug('End get_properties_for_postcode')
     return query[start_index:end_index].execute().hits
 
 
 def get_properties_for_address(address, page_size, page_number):
+    logger.debug('Start get_properties_for_address using {}'.format(address))
     search = _create_search(_get_address_search_doc_type())
     query = search.query('match', address_string=address.lower())
     start_index, end_index = _get_start_and_end_indexes(page_number, page_size)
+    logger.debug('End get_properties_for_address')
     return query[start_index:end_index].execute().hits
 
 
