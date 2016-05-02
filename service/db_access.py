@@ -57,7 +57,7 @@ def save_user_search_details(params):
     logger.debug('End save_user_search_details - returning cartId: {}'.format(cart_id))
     return cart_id
 
-
+# TODO: Check that this code is valid. What happens if a user pays for the same title again, for example?
 def user_can_view(user_id, title_number):
     """
     Get user's view details, after payment.
